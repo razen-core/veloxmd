@@ -10,8 +10,8 @@
     --text-primary: #1a1a1a;
     --text-secondary: #6b7280;
     --border-color: #e5e7eb;
-    --accent-color: #3b82f6;
-    --accent-hover: #2563eb;
+    --accent-color: #333333;
+    --accent-hover: #000000;
     --code-bg: #f3f4f6;
     --code-text: #1f2937;
     --hljs-bg: #f3f4f6;
@@ -166,7 +166,7 @@ body {
     font-size: 1rem;
     cursor: pointer;
     padding: 0.5rem;
-    border-radius: 6px;
+    border-radius: 12px;
     width: 32px;
     height: 32px;
     display: flex;
@@ -191,7 +191,7 @@ body {
     display: flex;
     align-items: center;
     padding: 0.6rem 0.8rem;
-    border-radius: 6px;
+    border-radius: 12px;
     cursor: pointer;
     margin-bottom: 0.25rem;
     position: relative;
@@ -553,7 +553,7 @@ body {
 #modal {
     background-color: var(--bg-primary);
     padding: 1.5rem 2rem;
-    border-radius: 8px;
+    border-radius: 20px;
     width: 90%;
     max-width: 400px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -585,7 +585,7 @@ body {
     border: 1px solid var(--border-color);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    border-radius: 6px;
+    border-radius: 12px;
     font-size: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -607,7 +607,7 @@ body {
     font-weight: 500;
     padding: 0.6rem 1.2rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 20px;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
     font-size: 0.9rem;
