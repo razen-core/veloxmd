@@ -1,11 +1,53 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-        <title>Title</title>
-        meta
-    </head>
-    <body>
-        body
-    </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Markdown Editor</title>
+
+    <!-- Google Fonts: Inter for UI, Fira Code for code, and a serif like Lora for prose -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- JS Libraries: marked for parsing, highlight.js for syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- I will manage the highlight.js theme via CSS to support light/dark modes -->
+
+    <!-- Custom Styles and Script -->
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div id="app-container">
+        <header id="app-header">
+            <h1 id="app-title">Editor</h1>
+            <div class="controls">
+                <button id="view-toggle" title="Toggle Preview">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button id="theme-toggle" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <main id="app-main">
+            <textarea id="editor" spellcheck="false"></textarea>
+            <div id="preview" class="hidden"></div>
+        </main>
+
+        <footer id="app-footer">
+            <div id="stats">
+                <span>Words: <span id="word-count">0</span></span>
+                <span>&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                <span>Chars: <span id="char-count">0</span></span>
+            </div>
+        </footer>
+    </div>
+</body>
 </html>
