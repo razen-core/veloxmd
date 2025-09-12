@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Element Selection
+    const appContainer = document.getElementById('app-container');
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
     const viewToggle = document.getElementById('view-toggle');
@@ -100,4 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     applyTheme(savedTheme);
     loadContent();
+
+    // --- Focus Mode ---
+    let focusModeTimer;
+    editor.addEventListener('input', () => {
+        if (!appContainer.classList.contains('is-writing')) {
+            appContainer.classList.add('is-writing');
+        }
+        clearTimeout(focusModeTimer);
+        focusModeTimer = setTimeout(() => {
+            appContainer.classList.remove('is-writing');
+        }, 1500);
+    });
 });
