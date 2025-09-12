@@ -1,8 +1,8 @@
 /* --- 1. Theming and Variables --- */
 :root {
-    --font-sans: 'Inter', sans-serif;
-    --font-serif: 'Lora', serif;
-    --font-mono: 'Fira Code', monospace;
+    --font-sans: 'Poppins', sans-serif;
+    --font-header: 'Rubik', sans-serif;
+    --font-mono: 'Google Sans Code', monospace;
 
     /* Light Theme */
     --bg-primary: #ffffff;
@@ -121,7 +121,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    padding: 2rem;
+    padding: 2rem 3rem;
     overflow-y: auto;
     transition: opacity 0.2s ease-in-out;
 }
@@ -141,7 +141,6 @@ body {
 }
 
 #preview {
-    font-family: var(--font-serif);
     line-height: 1.8;
     max-width: 800px;
     margin: 0 auto;
@@ -152,9 +151,13 @@ body {
     pointer-events: none;
 }
 
-/* --- 5. Preview Typography --- */
+/* --- 5. Preview Typography & Elements --- */
+#preview > *:first-child {
+    margin-top: 0;
+}
+
 #preview h1, #preview h2, #preview h3, #preview h4, #preview h5, #preview h6 {
-    font-family: var(--font-sans);
+    font-family: var(--font-header);
     font-weight: 700;
     margin-top: 1.5em;
     margin-bottom: 0.5em;
@@ -164,14 +167,15 @@ body {
 #preview h2 { font-size: 1.75rem; }
 #preview h3 { font-size: 1.5rem; }
 #preview p { margin-bottom: 1.25em; }
-#preview a { color: var(--accent-color); text-decoration: none; }
+#preview a { color: var(--accent-color); text-decoration: none; font-weight: 500; }
 #preview a:hover { text-decoration: underline; }
 #preview ul, #preview ol { margin-left: 1.5rem; margin-bottom: 1em; }
 #preview li { margin-bottom: 0.5em; }
+
 #preview blockquote {
     border-left: 4px solid var(--border-color);
     padding-left: 1em;
-    margin-left: 0;
+    margin: 1.5em 0;
     color: var(--text-secondary);
     font-style: italic;
 }
@@ -183,7 +187,8 @@ body {
 #preview table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1em;
+    margin: 1.5em 0;
+    font-size: 0.95rem;
 }
 #preview th, #preview td {
     border: 1px solid var(--border-color);
@@ -194,8 +199,42 @@ body {
     font-weight: bold;
     background-color: var(--bg-secondary);
 }
+#preview tr:nth-child(2n) {
+    background-color: var(--bg-secondary);
+}
 
-/* --- 6. Code Blocks & Syntax Highlighting --- */
+/* --- 6. Task Lists & Code Blocks --- */
+#preview .task-list-item {
+    list-style-type: none;
+}
+#preview .task-list-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.15em;
+    height: 1.15em;
+    border: 2px solid var(--text-secondary);
+    border-radius: 3px;
+    vertical-align: middle;
+    position: relative;
+    top: -0.1em;
+    margin-right: 0.5em;
+    cursor: default;
+}
+#preview .task-list-item input[type="checkbox"]:checked {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+#preview .task-list-item input[type="checkbox"]:checked::after {
+    content: '✔';
+    color: var(--bg-primary);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8em;
+}
+
+
 #preview code {
     font-family: var(--font-mono);
     background-color: var(--code-bg);
@@ -238,7 +277,7 @@ body {
 [data-theme='light'] .hljs-title,[data-theme='light'] .hljs-title.class_,[data-theme='light'] .hljs-title.class_.inherited__,[data-theme='light'] .hljs-title.function_{color:#6f42c1}
 [data-theme='light'] .hljs-attr,[data-theme='light'] .hljs-attribute,[data-theme='light'] .hljs-literal,[data-theme='light'] .hljs-meta,[data-theme='light'] .hljs-number,[data-theme='light'] .hljs-operator,[data-theme='light'] .hljs-selector-attr,[data-theme='light'] .hljs-selector-class,[data-theme='light'] .hljs-selector-id,[data-theme='light'] .hljs-variable{color:#005cc5}
 [data-theme='light'] .hljs-regexp,[data-theme='light'] .hljs-string,[data-theme='light'] .hljs-symbol{color:#032f62}
-[data-theme='light'] .hljs-built_in,[data-theme='light'] .hljs-code,[data-theme='light'] .hljs-comment,[data-theme='light'] .hljs-formula,[data-theme='light'] .hljs-name,[data-theme='light'] .hljs-quote,[data-theme='light'] .hljs-selector-pseudo,[data-theme='light'] .hljs-selector-tag,[data-theme='light'] .hljs-subst,[data-theme='light'] .hljs-tag{color:#6a737d}
+[data-theme='light'] .hljs-built_in,[data-theme='light'] .hljs-code,[data-theme='light'] .hljs-comment,[data-theme='light'] .hljs-formula,[data-theme='light'] .js-name,[data-theme='light'] .hljs-quote,[data-theme='light'] .hljs-selector-pseudo,[data-theme='light'] .hljs-selector-tag,[data-theme='light'] .hljs-subst,[data-theme='light'] .hljs-tag{color:#6a737d}
 [data-theme='light'] .hljs-section{color:#005cc5;font-weight:700}
 [data-theme='light'] .hljs-bullet{color:#735c0f}
 [data-theme='light'] .hljs-emphasis{color:#24292e;font-style:italic}
