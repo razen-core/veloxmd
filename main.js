@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const charCountEl = document.getElementById('char-count');
     const sidebar = document.getElementById('sidebar');
     const fileList = document.getElementById('file-list');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+    const modalInput = document.getElementById('modal-input');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalConfirmBtn = document.getElementById('modal-confirm-btn');
 
     // 2. State Management
     let state = {
@@ -194,11 +200,18 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
     };
 
-    const handleRenameFile = (id) => {
+    const handleRenameFile = async (id) => {
         const file = state.files.find(f => f.id === id);
         if (!file) return;
 
-        const newName = prompt("Enter new file name:", file.name);
+        const newName = await showModal({
+            title: 'Rename File',
+            message: `Enter a new name for "${file.name}":`,
+            type: 'prompt',
+            inputValue: file.name,
+            inputPlaceholder: 'Enter file name'
+        });
+
         if (newName && newName.trim() !== '' && newName !== file.name) {
             file.name = newName.trim();
             renderFileList();
@@ -221,12 +234,17 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     };
 
-    const handleDeleteFile = (id) => {
+    const handleDeleteFile = async (id) => {
         const fileIndex = state.files.findIndex(f => f.id === id);
         if (fileIndex === -1) return;
 
         const file = state.files[fileIndex];
-        if (!confirm(`Are you sure you want to delete "${file.name}"?`)) {
+        const confirmed = await showModal({
+            title: 'Delete File',
+            message: `Are you sure you want to delete "${file.name}"? This action cannot be undone.`
+        });
+
+        if (!confirmed) {
             return;
         }
 
@@ -234,12 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.activeFileId === id) {
             if (state.files.length > 0) {
-                // Activate the previous file or the first one
                 const newActiveIndex = Math.max(0, fileIndex - 1);
                 state.activeFileId = state.files[newActiveIndex].id;
             } else {
-                // No files left, create a new one
-                createNewFile(false); // Will be saved later
+                createNewFile(false);
             }
         }
 
@@ -279,7 +295,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newFileBtn.addEventListener('click', () => createNewFile());
 
-    // 7. Initialization
+    // 7. Modal Logic
+    let modalResolve = null;
+
+    const showModal = ({ title, message, inputValue = '', inputPlaceholder = '', type = 'confirm' }) => {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+
+        if (type === 'prompt') {
+            modalInput.classList.remove('hidden');
+            modalInput.value = inputValue;
+            modalInput.placeholder = inputPlaceholder;
+        } else {
+            modalInput.classList.add('hidden');
+        }
+
+        modalOverlay.classList.remove('hidden');
+        if (type === 'prompt') {
+            modalInput.focus();
+            modalInput.select();
+        }
+
+        return new Promise((resolve) => {
+            modalResolve = resolve;
+        });
+    };
+
+    const hideModal = () => {
+        modalOverlay.classList.add('hidden');
+        modalResolve = null;
+    };
+
+    modalConfirmBtn.addEventListener('click', () => {
+        if (modalResolve) {
+            const isPrompt = !modalInput.classList.contains('hidden');
+            modalResolve(isPrompt ? modalInput.value : true);
+            hideModal();
+        }
+    });
+
+    modalCancelBtn.addEventListener('click', () => {
+        if (modalResolve) {
+            modalResolve(null); // Resolve with null on cancel
+            hideModal();
+        }
+    });
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            if (modalResolve) {
+                modalResolve(null);
+                hideModal();
+            }
+        }
+    });
+
+    // 8. Initialization
     const init = () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
