@@ -78,12 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
         preview.classList.toggle('hidden');
         
         if (isPreview) {
-            appTitle.textContent = 'Preview';
+            appTitle.textContent = 'Pro Preview';
             viewIcon.classList.remove('fa-eye');
             viewIcon.classList.add('fa-pencil-alt');
             viewToggle.title = 'Toggle Editor';
         } else {
-            appTitle.textContent = 'Editor';
+            appTitle.textContent = 'Pro Editor';
             viewIcon.classList.remove('fa-pencil-alt');
             viewIcon.classList.add('fa-eye');
             viewToggle.title = 'Toggle Preview';
