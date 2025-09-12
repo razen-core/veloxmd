@@ -257,6 +257,58 @@ body {
     background: none;
 }
 
+#preview .code-block-container {
+    margin-bottom: 1.5em;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+#preview .code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-secondary);
+    padding: 0.5em 1em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+#preview .lang-name {
+    font-size: 0.8em;
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+#preview .copy-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85em;
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+    font-family: var(--font-sans);
+}
+
+#preview .copy-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+#preview .copy-btn .fas,
+#preview .copy-btn .far {
+    margin-right: 0.5em;
+}
+
+#preview .code-block-container pre {
+    margin-bottom: 0;
+    border-radius: 0;
+    border: none;
+    background-color: var(--hljs-bg); /* Ensure pre background matches theme */
+}
+
 /* GitHub Dark Theme for highlight.js */
 [data-theme='dark'] .hljs{color:#c9d1d9;background:#0d1117}
 [data-theme='dark'] .hljs-doctag,[data-theme='dark'] .hljs-keyword,[data-theme='dark'] .hljs-meta .hljs-keyword,[data-theme='dark'] .hljs-template-tag,[data-theme='dark'] .hljs-template-variable,[data-theme='dark'] .hljs-type,[data-theme='dark'] .hljs-variable.language_{color:#ff7b72}

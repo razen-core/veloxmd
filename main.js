@@ -13,20 +13,65 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 3. Markdown & Highlighting Setup
     marked.setOptions({
-        highlight: function(code, lang) {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-            return hljs.highlight(code, { language }).value;
-        },
         gfm: true,
         breaks: true,
+        langPrefix: 'language-', // Ensure this is set for hljs to find languages
     });
     
     // 4. Functions
     const updatePreview = () => {
         preview.innerHTML = marked.parse(editor.value);
-        // After updating, re-highlight the code blocks in the preview
-        preview.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
+
+        preview.querySelectorAll('pre code').forEach(codeElement => {
+            const preElement = codeElement.parentElement;
+
+            // Prevent re-wrapping
+            if (preElement.parentElement.classList.contains('code-block-container')) {
+                return;
+            }
+
+            // Highlight the block
+            hljs.highlightElement(codeElement);
+
+            // Extract language
+            const langClass = Array.from(codeElement.classList).find(cls => cls.startsWith('language-'));
+            const lang = langClass ? langClass.replace('language-', '') : 'plaintext';
+
+            // Create container
+            const container = document.createElement('div');
+            container.className = 'code-block-container';
+
+            // Create header
+            const header = document.createElement('div');
+            header.className = 'code-block-header';
+
+            const langName = document.createElement('span');
+            langName.className = 'lang-name';
+            langName.textContent = lang;
+
+            const copyButton = document.createElement('button');
+            copyButton.className = 'copy-btn';
+            copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(codeElement.innerText).then(() => {
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    copyButton.innerText = 'Error!';
+                });
+            });
+
+            header.appendChild(langName);
+            header.appendChild(copyButton);
+
+            // Assemble and replace
+            preElement.parentNode.insertBefore(container, preElement);
+            container.appendChild(header);
+            container.appendChild(preElement);
         });
     };
     
