@@ -25,7 +25,12 @@
 <body>
     <div id="app-container">
         <header id="app-header">
-            <h1 id="app-title">Pro Editor</h1>
+            <div class="header-left">
+                <button id="sidebar-toggle" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="app-title">Pro Editor</h1>
+            </div>
             <div class="controls">
                 <button id="view-toggle" title="Toggle Preview">
                     <i class="fas fa-eye"></i>
@@ -36,10 +41,23 @@
             </div>
         </header>
 
-        <main id="app-main">
-            <textarea id="editor" spellcheck="false"></textarea>
-            <div id="preview" class="hidden"></div>
-        </main>
+        <div id="app-body">
+            <aside id="sidebar">
+                <div id="sidebar-header">
+                    <h2>Files</h2>
+                    <button id="new-file-btn" title="New File">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <ul id="file-list">
+                    <!-- File items will be injected by JS -->
+                </ul>
+            </aside>
+            <main id="app-main">
+                <textarea id="editor" spellcheck="false"></textarea>
+                <div id="preview" class="hidden"></div>
+            </main>
+        </div>
 
         <footer id="app-footer">
             <div id="stats">
