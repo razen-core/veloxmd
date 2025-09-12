@@ -1,39 +1,35 @@
 /* --- 1. Theming and Variables --- */
-@keyframes blink {
-    50% { opacity: 0; }
-}
-
 :root {
     --font-sans: 'Poppins', sans-serif;
     --font-header: 'Rubik', sans-serif;
     --font-mono: 'Google Sans Code', monospace;
 
     /* Light Theme */
-    --bg-primary: #fcfcfc;
-    --bg-secondary: #f4f4f5;
-    --text-primary: #18181b;
-    --text-secondary: #71717a;
-    --border-color: #e4e4e7;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f7;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
     --accent-color: #3b82f6;
     --accent-hover: #2563eb;
-    --code-bg: #f4f4f5;
-    --code-text: #3f3f46;
-    --hljs-bg: #f4f4f5;
-    --hljs-text: #3f3f46;
+    --code-bg: #f3f4f6;
+    --code-text: #1f2937;
+    --hljs-bg: #f3f4f6;
+    --hljs-text: #1f2937;
 }
 
 [data-theme='dark'] {
-    --bg-primary: #18181b;
-    --bg-secondary: #27272a;
-    --text-primary: #e4e4e7;
-    --text-secondary: #a1a1aa;
-    --border-color: #27272a;
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --text-primary: #e5e5e5;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
     --accent-color: #60a5fa;
     --accent-hover: #3b82f6;
-    --code-bg: #27272a;
-    --code-text: #d4d4d8;
-    --hljs-bg: #27272a;
-    --hljs-text: #d4d4d8;
+    --code-bg: #1e1e1e;
+    --code-text: #d1d5db;
+    --hljs-bg: #1e1e1e;
+    --hljs-text: #d1d5db;
 }
 
 /* --- 2. Global Styles & Reset --- */
@@ -50,9 +46,8 @@ html, body {
 body {
     font-family: var(--font-sans);
     background-color: var(--bg-primary);
-    background-image: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.01));
     color: var(--text-primary);
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.2s, color 0.2s;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -96,28 +91,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 #app-header .controls button:hover {
     background-color: var(--bg-secondary);
     color: var(--text-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-#app-header, #app-footer {
-    transition: opacity 0.4s ease-in-out;
-}
-
-.is-writing #app-header,
-.is-writing #app-footer {
-    opacity: 0.15;
-}
-
-.is-writing #app-header:hover,
-.is-writing #app-footer:hover {
-    opacity: 1;
 }
 
 #app-main {
@@ -142,21 +121,19 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    padding: 3rem 4rem;
+    padding: 2rem 3rem;
     overflow-y: auto;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.2s ease-in-out;
 }
 
 #editor {
-    background-color: transparent;
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     border: none;
     resize: none;
     font-family: var(--font-mono);
     font-size: 1rem;
-    line-height: 1.8;
-    caret-color: var(--accent-color);
-    animation: blink 1.2s step-end infinite;
+    line-height: 1.7;
 }
 
 #editor:focus {
