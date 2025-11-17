@@ -13,25 +13,14 @@
 <body>
     <div class="dashboard-container">
         <header class="dashboard-header">
-            <h1>Pro MarkDown</h1>
-            <p>A modern, minimalist Markdown editor for pros.</p>
+            <h1 class="dashboard-title">My Documents</h1>
+            <a href="editor.html" id="new-document-btn" class="cta-button">
+                <i class="fas fa-plus"></i> <span class="cta-button-text">New Document</span>
+            </a>
         </header>
         <main class="dashboard-main">
-            <a href="editor.html" class="cta-button">Launch Editor</a>
-            <section id="recent-documents" class="recent-documents">
-                <h2>Recent Documents</h2>
-                <ul id="recent-files-list">
-                    <!-- Recent files will be dynamically inserted here -->
-                </ul>
-            </section>
-            <section class="features">
-                <h2>Features</h2>
-                <ul>
-                    <li><i class="fas fa-eye"></i> Live Preview</li>
-                    <li><i class="fas fa-code"></i> Syntax Highlighting</li>
-                    <li><i class="fas fa-adjust"></i> Dark/Light Mode</li>
-                    <li><i class="fas fa-mobile-alt"></i> Responsive Design</li>
-                </ul>
+            <section id="documents-grid" class="documents-grid">
+                <!-- Documents will be dynamically inserted here -->
             </section>
         </main>
         <footer class="dashboard-footer">
@@ -39,5 +28,18 @@
         </footer>
     </div>
     <script src="dashboard.js" defer></script>
+
+    <!-- Custom Modal -->
+    <div id="modal-overlay" class="hidden">
+        <div id="modal">
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <input type="text" id="modal-input" class="hidden">
+            <div id="modal-actions">
+                <button id="modal-cancel-btn">Cancel</button>
+                <button id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
