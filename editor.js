@@ -355,7 +355,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
 
+        // Check for file ID in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileIdFromUrl = urlParams.get('file');
+
         loadState();
+
+        if (fileIdFromUrl && state.files.find(f => f.id === fileIdFromUrl)) {
+            state.activeFileId = fileIdFromUrl;
+        }
+
         renderFileList();
         updateEditorAndPreview();
         toggleSidebar(state.isSidebarVisible); // Set initial sidebar state
