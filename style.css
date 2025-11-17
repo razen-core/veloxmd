@@ -641,3 +641,85 @@ body {
 #modal-confirm-btn:hover {
     background-color: var(--accent-hover);
 }
+
+/* --- 9. Dashboard Styles --- */
+.dashboard-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.dashboard-header h1 {
+    font-family: var(--font-header);
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.cta-button {
+    display: inline-block;
+    background-color: var(--accent-color);
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: 20px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.cta-button:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.features {
+    margin-top: 3rem;
+}
+
+.features h2 {
+    font-family: var(--font-header);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.features ul {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.features li {
+    background-color: var(--bg-secondary);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-footer {
+    margin-top: 4rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+@media (max-width: 600px) {
+    .dashboard-header h1 {
+        font-size: 2.5rem;
+    }
+    .features ul {
+        flex-direction: column;
+    }
+}
