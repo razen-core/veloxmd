@@ -81,7 +81,29 @@ body {
 
 #app-header .controls {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
+}
+
+#theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#theme-toggle:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 #app-header .controls button {
@@ -793,6 +815,45 @@ body {
     padding: 4rem 2rem;
     background-color: var(--bg-secondary);
     border-radius: 20px;
+}
+
+#table-of-contents {
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.toc-link {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.toc-link:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.toc-level-2 {
+    padding-left: 2rem;
+}
+
+.toc-level-3 {
+    padding-left: 3rem;
+}
+
+.toc-level-4 {
+    padding-left: 4rem;
+}
+
+.toc-level-5 {
+    padding-left: 5rem;
+}
+
+.toc-level-6 {
+    padding-left: 6rem;
 }
 
 .no-documents-message h3 {
