@@ -5,12 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewToggle = document.getElementById('view-toggle');
     const themeToggle = document.getElementById('theme-toggle');
     const sidebarToggle = document.getElementById('sidebar-toggle');
-    const newFileBtn = document.getElementById('new-file-btn');
     const appTitle = document.getElementById('app-title');
     const wordCountEl = document.getElementById('word-count');
     const charCountEl = document.getElementById('char-count');
     const sidebar = document.getElementById('sidebar');
-    const fileList = document.getElementById('file-list');
+    const tableOfContents = document.getElementById('table-of-contents');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
@@ -101,49 +100,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const renderFileList = () => {
-        fileList.innerHTML = '';
-        if (state.files.length === 0) {
-            // Optionally, show a message like "No files yet."
-            return;
+    const updateTableOfContents = () => {
+        const activeFile = state.files.find(f => f.id === state.activeFileId);
+        if (!activeFile) return;
+
+        const headings = activeFile.content.match(/^#{1,6}\s.*$/gm) || [];
+        if (headings.length > 0) {
+            tableOfContents.innerHTML = headings.map(heading => {
+                const level = heading.indexOf(' ');
+                const text = heading.substring(level + 1);
+                const slug = text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+                return `<a href="#${slug}" class="toc-link toc-level-${level}" data-slug="${slug}">${text}</a>`;
+            }).join('');
+        } else {
+            tableOfContents.innerHTML = '<p class="no-outline">No outline available.</p>';
         }
-
-        state.files.forEach(file => {
-            const li = document.createElement('li');
-            li.className = 'file-item';
-            li.dataset.id = file.id;
-            if (file.id === state.activeFileId) {
-                li.classList.add('active');
-            }
-
-            const fileNameSpan = document.createElement('span');
-            fileNameSpan.className = 'file-item-name';
-            fileNameSpan.textContent = file.name;
-
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'file-item-actions';
-
-            const renameBtn = document.createElement('button');
-            renameBtn.innerHTML = '<i class="fas fa-pen"></i>';
-            renameBtn.title = 'Rename';
-            renameBtn.onclick = (e) => { e.stopPropagation(); handleRenameFile(file.id); };
-
-            const downloadBtn = document.createElement('button');
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-            downloadBtn.title = 'Download';
-            downloadBtn.onclick = (e) => { e.stopPropagation(); handleDownloadFile(file.id); };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.title = 'Delete';
-            deleteBtn.onclick = (e) => { e.stopPropagation(); handleDeleteFile(file.id); };
-
-            actionsDiv.append(renameBtn, downloadBtn, deleteBtn);
-            li.append(fileNameSpan, actionsDiv);
-            li.addEventListener('click', () => switchActiveFile(file.id));
-
-            fileList.appendChild(li);
-        });
     };
 
     const updateEditorAndPreview = () => {
@@ -183,7 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
         state.files.push(newFile);
         state.activeFileId = newId;
 
-        renderFileList();
         updateEditorAndPreview();
         if (save) saveState();
     };
@@ -191,10 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const switchActiveFile = (id) => {
         if (id === state.activeFileId) return;
         state.activeFileId = id;
-
-        // Update active class in UI
-        document.querySelectorAll('.file-item.active').forEach(el => el.classList.remove('active'));
-        document.querySelector(`.file-item[data-id="${id}"]`)?.classList.add('active');
 
         updateEditorAndPreview();
         saveState();
@@ -214,7 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (newName && newName.trim() !== '' && newName !== file.name) {
             file.name = newName.trim();
-            renderFileList();
             saveState();
         }
     };
@@ -259,7 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        renderFileList();
         updateEditorAndPreview();
         saveState();
     };
@@ -271,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activeFile.content = editor.value;
             updatePreview();
             updateStats();
+            updateTableOfContents();
             saveState();
         }
     });
@@ -292,8 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarToggle.addEventListener('click', () => {
         toggleSidebar(!state.isSidebarVisible);
     });
-
-    newFileBtn.addEventListener('click', () => createNewFile());
 
     // 7. Modal Logic
     let modalResolve = null;
@@ -365,8 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
             state.activeFileId = fileIdFromUrl;
         }
 
-        renderFileList();
         updateEditorAndPreview();
+        updateTableOfContents();
         toggleSidebar(state.isSidebarVisible); // Set initial sidebar state
     };
 
