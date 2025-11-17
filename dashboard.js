@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalInput = document.getElementById('modal-input');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+    const themeToggle = document.getElementById('theme-toggle');
 
     let files = [];
     let modalResolve = null;
@@ -205,6 +206,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    loadFiles();
-    renderDocuments();
+    const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('theme', theme);
+    };
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    const init = () => {
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(savedTheme);
+        loadFiles();
+        renderDocuments();
+    };
+
+    init();
 });
