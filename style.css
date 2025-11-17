@@ -733,6 +733,45 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+.document-card-link {
+    text-decoration: none;
+    color: inherit;
+    flex-grow: 1;
+}
+
+.document-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.document-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
 [data-theme='dark'] .document-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -775,11 +814,20 @@ body {
 
 @media (max-width: 600px) {
     .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
+        flex-direction: row;
+        align-items: center;
         gap: 1rem;
     }
     .dashboard-title {
         font-size: 1.75rem;
+    }
+    .cta-button-text {
+        display: none;
+    }
+    .cta-button {
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        justify-content: center;
     }
 }

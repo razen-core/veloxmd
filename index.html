@@ -15,7 +15,7 @@
         <header class="dashboard-header">
             <h1 class="dashboard-title">My Documents</h1>
             <a href="editor.html" id="new-document-btn" class="cta-button">
-                <i class="fas fa-plus"></i> New Document
+                <i class="fas fa-plus"></i> <span class="cta-button-text">New Document</span>
             </a>
         </header>
         <main class="dashboard-main">
@@ -28,5 +28,18 @@
         </footer>
     </div>
     <script src="dashboard.js" defer></script>
+
+    <!-- Custom Modal -->
+    <div id="modal-overlay" class="hidden">
+        <div id="modal">
+            <h3 id="modal-title"></h3>
+            <p id="modal-message"></p>
+            <input type="text" id="modal-input" class="hidden">
+            <div id="modal-actions">
+                <button id="modal-cancel-btn">Cancel</button>
+                <button id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
