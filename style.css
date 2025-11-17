@@ -111,6 +111,28 @@ body {
     gap: 0.5rem;
 }
 
+.back-to-dashboard {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+    text-decoration: none;
+}
+
+.back-to-dashboard:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
 #sidebar-toggle {
     background: none;
     border: none;
@@ -644,35 +666,34 @@ body {
 
 /* --- 9. Dashboard Styles --- */
 .dashboard-container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    text-align: center;
+}
+
+.dashboard-header {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 100vh;
-}
-
-.dashboard-header h1 {
-    font-family: var(--font-header);
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.dashboard-header p {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dashboard-title {
+    font-family: var(--font-header);
+    font-size: 2rem;
+    font-weight: 700;
 }
 
 .cta-button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background-color: var(--accent-color);
     color: white;
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
     font-weight: 500;
     text-decoration: none;
     border-radius: 30px;
@@ -684,97 +705,81 @@ body {
     transform: translateY(-2px);
 }
 
-.recent-documents {
-    margin-top: 3rem;
-    text-align: left;
-    width: 100%;
+[data-theme='dark'] .cta-button {
+    color: var(--bg-primary);
 }
 
-.recent-documents h2 {
-    font-family: var(--font-header);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    text-align: center;
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
 }
 
-#recent-files-list {
-    list-style: none;
-    padding: 0;
-}
-
-#recent-files-list li a {
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem;
+.document-card {
+    background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 20px;
+    padding: 1.5rem;
     text-decoration: none;
     color: var(--text-primary);
-    background-color: var(--bg-secondary);
-    margin-bottom: 0.5rem;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-#recent-files-list li a:hover {
-    background-color: var(--border-color);
+.document-card:hover {
     border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.file-name {
-    font-weight: 500;
+[data-theme='dark'] .document-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.file-date {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.no-recent-files {
-    text-align: center;
-    color: var(--text-secondary);
-}
-
-.no-recent-files a {
-    color: var(--accent-color);
-    font-weight: 500;
-}
-
-.features {
-    margin-top: 3rem;
-}
-
-.features h2 {
+.document-title {
     font-family: var(--font-header);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     margin-bottom: 1rem;
 }
 
-.features ul {
-    list-style: none;
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+.document-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
-.features li {
+.no-documents-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
     background-color: var(--bg-secondary);
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border-radius: 20px;
+}
+
+.no-documents-message h3 {
+    font-family: var(--font-header);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.no-documents-message p {
+    color: var(--text-secondary);
 }
 
 .dashboard-footer {
+    text-align: center;
     margin-top: 4rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
 @media (max-width: 600px) {
-    .dashboard-header h1 {
-        font-size: 2.5rem;
-    }
-    .features ul {
+    .dashboard-header {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .dashboard-title {
+        font-size: 1.75rem;
     }
 }
