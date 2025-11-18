@@ -33,6 +33,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // 4. Functions
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    };
+
     const updatePreview = () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         const content = activeFile ? activeFile.content : '';
@@ -229,14 +239,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 6. Event Listeners
+    const debouncedUpdatePreview = debounce(updatePreview, 300);
+    const debouncedUpdateTOC = debounce(updateTableOfContents, 300);
+    const debouncedSaveState = debounce(saveState, 500);
+
     editor.addEventListener('input', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
             activeFile.content = editor.value;
-            updatePreview();
+
+            // Update stats immediately for responsiveness
             updateStats();
-            updateTableOfContents();
-            saveState();
+
+            // Debounce heavier operations
+            debouncedUpdatePreview();
+            debouncedUpdateTOC();
+            debouncedSaveState();
         }
     });
 
