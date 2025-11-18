@@ -86,19 +86,21 @@ body {
 }
 
 #theme-toggle {
-    background: none;
-    border: none;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-size: 1.125rem;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    padding: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s, color 0.2s;
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
 }
 
 #theme-toggle:hover {
@@ -702,6 +704,11 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.dashboard-header .controls {
+    display: flex;
+    align-items: center;
+}
+
 .dashboard-title {
     font-family: var(--font-header);
     font-size: 2rem;
@@ -720,6 +727,10 @@ body {
     text-decoration: none;
     border-radius: 30px;
     transition: background-color 0.2s, transform 0.2s;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .cta-button:hover {
