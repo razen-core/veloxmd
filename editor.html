@@ -38,9 +38,16 @@
                 <button id="view-toggle" title="Toggle Preview">
                     <i class="fas fa-eye"></i>
                 </button>
-                <button id="theme-toggle" title="Toggle Theme">
-                    <i class="fas fa-moon"></i>
-                </button>
+                <div id="settings-menu" class="dropdown">
+                    <button id="settings-menu-toggle" class="dropdown-toggle" title="Settings">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div id="settings-menu-content" class="dropdown-content hidden">
+                        <a href="#" id="theme-toggle"><i class="fas fa-moon"></i><span>Toggle Theme</span></a>
+                        <a href="#" id="settings-button" class="disabled"><i class="fas fa-cog"></i><span>Settings</span></a>
+                        <a href="#" id="ai-mode-button" class="disabled"><i class="fas fa-robot"></i><span>AI Mode</span></a>
+                    </div>
+                </div>
             </div>
         </header>
 

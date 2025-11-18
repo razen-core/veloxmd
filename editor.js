@@ -6,6 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const appTitle = document.getElementById('app-title');
+    const settingsMenuToggle = document.getElementById('settings-menu-toggle');
+    const settingsMenuContent = document.getElementById('settings-menu-content');
+    const settingsButton = document.getElementById('settings-button');
+    const aiModeButton = document.getElementById('ai-mode-button');
     const wordCountEl = document.getElementById('word-count');
     const charCountEl = document.getElementById('char-count');
     const sidebar = document.getElementById('sidebar');
@@ -33,6 +37,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // 4. Functions
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    };
+
     const updatePreview = () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         const content = activeFile ? activeFile.content : '';
@@ -229,14 +243,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 6. Event Listeners
+    const debouncedUpdatePreview = debounce(updatePreview, 300);
+    const debouncedUpdateTOC = debounce(updateTableOfContents, 300);
+    const debouncedSaveState = debounce(saveState, 500);
+
     editor.addEventListener('input', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
             activeFile.content = editor.value;
-            updatePreview();
+
+            // Update stats immediately for responsiveness
             updateStats();
-            updateTableOfContents();
-            saveState();
+
+            // Debounce heavier operations
+            debouncedUpdatePreview();
+            debouncedUpdateTOC();
+            debouncedSaveState();
         }
     });
 
@@ -249,13 +271,33 @@ document.addEventListener('DOMContentLoaded', () => {
         appTitle.textContent = state.isPreview ? 'Pro Preview' : 'Pro Editor';
     });
 
-    themeToggle.addEventListener('click', () => {
+    themeToggle.addEventListener('click', (e) => {
+        e.preventDefault();
         const currentTheme = document.documentElement.getAttribute('data-theme');
         applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
     sidebarToggle.addEventListener('click', () => {
         toggleSidebar(!state.isSidebarVisible);
+    });
+
+    settingsMenuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsMenuContent.classList.toggle('hidden');
+    });
+
+    settingsButton.addEventListener('click', (e) => {
+        e.preventDefault();
+    });
+
+    aiModeButton.addEventListener('click', (e) => {
+        e.preventDefault();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!settingsMenuContent.classList.contains('hidden') && !settingsMenuContent.contains(e.target)) {
+            settingsMenuContent.classList.add('hidden');
+        }
     });
 
     // 7. Modal Logic
