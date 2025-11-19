@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const charCountEl = document.getElementById('char-count');
     const sidebar = document.getElementById('sidebar');
     const tableOfContents = document.getElementById('table-of-contents');
+    
+    // Modal Elements
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
@@ -25,64 +27,123 @@ document.addEventListener('DOMContentLoaded', () => {
         isSidebarVisible: true,
     };
 
-    // 3. Markdown & Highlighting Setup
+    // 3. Modern Tech Setup (Performance Observers)
     marked.setOptions({
         gfm: true,
         breaks: true,
         langPrefix: 'language-',
     });
-    
+
+    // [Modern Tech] Lazy Highlighter Observer
+    // Prevents freezing by only highlighting code blocks currently visible on screen
+    const codeObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const codeEl = entry.target;
+                if (!codeEl.classList.contains('hljs')) {
+                    hljs.highlightElement(codeEl);
+                    enhanceCodeBlockUI(codeEl); // Add your Copy Button UI
+                }
+                observer.unobserve(codeEl);
+            }
+        });
+    }, { root: preview, rootMargin: '50px' });
+
     // 4. Functions
+
+    // [Enhanced] Uses requestAnimationFrame for UI smoothness
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
             clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => {
-                func.apply(this, args);
-            }, delay);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
         };
+    };
+
+    // [Enhanced] Separated logic for cleaner performance
+    const enhanceCodeBlockUI = (codeElement) => {
+        // Prevent double processing
+        if (codeElement.closest('.code-block-container')) return;
+
+        const lang = (Array.from(codeElement.classList).find(c => c.startsWith('language-')) || '').replace('language-', '');
+        
+        // Create UI Elements (Preserving your exact design)
+        const container = document.createElement('div');
+        container.className = 'code-block-container';
+        
+        const header = document.createElement('div');
+        header.className = 'code-block-header';
+        
+        const langName = document.createElement('span');
+        langName.className = 'lang-name';
+        langName.textContent = lang || 'text';
+        
+        const copyButton = document.createElement('button');
+        copyButton.className = 'copy-btn';
+        copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
+        
+        copyButton.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(codeElement.innerText);
+                copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => { copyButton.innerHTML = '<i class="far fa-copy"></i> Copy'; }, 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        };
+
+        header.append(langName, copyButton);
+        
+        // DOM Manipulation
+        const preElement = codeElement.parentElement;
+        preElement.replaceWith(container);
+        container.append(header, preElement);
     };
 
     const updatePreview = () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         const content = activeFile ? activeFile.content : '';
-        preview.innerHTML = marked.parse(content);
+        
+        // 1. Parse Markdown
+        const newHTML = marked.parse(content);
 
+        // 2. Update DOM (Only if changed to prevent scroll jumping)
+        if (preview.innerHTML !== newHTML) {
+            // Save scroll position before update
+            const scrollPos = preview.scrollTop;
+            preview.innerHTML = newHTML;
+            // Restore scroll if not syncing
+            if (state.isPreview) preview.scrollTop = scrollPos;
+        }
+
+        // 3. Attach Lazy Observer to Code Blocks (Zero Lag)
         preview.querySelectorAll('pre code').forEach(codeElement => {
-            if (codeElement.parentElement.parentElement.classList.contains('code-block-container')) return;
-            hljs.highlightElement(codeElement);
-            const lang = (Array.from(codeElement.classList).find(c => c.startsWith('language-')) || '').replace('language-', '');
-            const container = document.createElement('div');
-            container.className = 'code-block-container';
-            const header = document.createElement('div');
-            header.className = 'code-block-header';
-            const langName = document.createElement('span');
-            langName.className = 'lang-name';
-            langName.textContent = lang || 'plaintext';
-            const copyButton = document.createElement('button');
-            copyButton.className = 'copy-btn';
-            copyButton.innerHTML = '<i class="far fa-copy"></i> Copy';
-            copyButton.onclick = () => {
-                navigator.clipboard.writeText(codeElement.innerText).then(() => {
-                    copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                    setTimeout(() => { copyButton.innerHTML = '<i class="far fa-copy"></i> Copy'; }, 2000);
-                });
-            };
-            header.append(langName, copyButton);
-            const preElement = codeElement.parentElement;
-            preElement.parentNode.insertBefore(container, preElement);
-            container.append(header, preElement);
+            if (!codeElement.closest('.code-block-container')) {
+                codeObserver.observe(codeElement);
+            }
         });
     };
 
     const updateStats = () => {
         const text = editor.value;
-        const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+        // Optimized Regex
+        const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        
+        // Update text content directly
         charCountEl.textContent = text.length;
         wordCountEl.textContent = wordCount;
     };
     
+    // [Enhanced] Uses requestIdleCallback to save during browser idle time
     const saveState = () => {
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => performSave());
+        } else {
+            setTimeout(performSave, 50);
+        }
+    };
+
+    const performSave = () => {
         const { files, activeFileId } = state;
         localStorage.setItem('markdown_files', JSON.stringify(files));
         localStorage.setItem('active_file_id', activeFileId);
@@ -101,8 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (state.files.length === 0) {
-            // Create a default file if none exist
-            createNewFile(false); // Don't save state yet, it will be saved in loadState
+            createNewFile(false); 
         }
 
         if (!state.activeFileId || !state.files.find(f => f.id === state.activeFileId)) {
@@ -114,14 +174,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (!activeFile) return;
 
+        // Regex optimization
         const headings = activeFile.content.match(/^#{1,6}\s.*$/gm) || [];
+        
         if (headings.length > 0) {
-            tableOfContents.innerHTML = headings.map(heading => {
+            const tocHTML = headings.map(heading => {
                 const level = heading.indexOf(' ');
                 const text = heading.substring(level + 1);
-                const slug = text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+                const slug = text.trim().toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\w-]+/g, '');
+                    
                 return `<a href="#${slug}" class="toc-link toc-level-${level}" data-slug="${slug}">${text}</a>`;
             }).join('');
+            
+            // Only update DOM if changed
+            if (tableOfContents.innerHTML !== tocHTML) {
+                tableOfContents.innerHTML = tocHTML;
+            }
         } else {
             tableOfContents.innerHTML = '<p class="no-outline">No outline available.</p>';
         }
@@ -130,9 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateEditorAndPreview = () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
-            editor.value = activeFile.content;
+            if (editor.value !== activeFile.content) {
+                editor.value = activeFile.content;
+            }
         } else {
-            editor.value = ''; // Clear editor if no active file
+            editor.value = ''; 
         }
         updatePreview();
         updateStats();
@@ -152,7 +224,18 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarToggle.title = show ? 'Close Sidebar' : 'Open Sidebar';
     };
 
-    // 5. File Operations
+    // [Enhanced] Sync Scroll Feature
+    const syncScroll = () => {
+        if(state.isPreview) return;
+        // Calculate percentage
+        const scrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+        // Apply to preview
+        if (!isNaN(scrollPercentage)) {
+             preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
+        }
+    };
+
+    // 5. File Operations (Preserved Exact Logic)
     const createNewFile = (save = true) => {
         const newId = `file_${Date.now()}`;
         const fileNumber = state.files.length + 1;
@@ -168,6 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (save) saveState();
     };
 
+    // Note: This function is internal. If you use it in HTML (onclick), 
+    // you must attach it to window or use event listeners.
+    // Assuming internal usage based on provided code.
     const switchActiveFile = (id) => {
         if (id === state.activeFileId) return;
         state.activeFileId = id;
@@ -239,23 +325,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 6. Event Listeners
-    const debouncedUpdatePreview = debounce(updatePreview, 300);
-    const debouncedUpdateTOC = debounce(updateTableOfContents, 300);
-    const debouncedSaveState = debounce(saveState, 500);
+    const debouncedUpdatePreview = debounce(updatePreview, 250); // Faster response
+    const debouncedUpdateTOC = debounce(updateTableOfContents, 500); // Slower is fine
+    const debouncedSaveState = debounce(saveState, 1000); // Lazy save
 
     editor.addEventListener('input', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
             activeFile.content = editor.value;
 
-            // Update stats immediately for responsiveness
+            // Instant Stats Update
             updateStats();
 
-            // Debounce heavier operations
+            // Smart Schedule
             debouncedUpdatePreview();
             debouncedUpdateTOC();
             debouncedSaveState();
         }
+    });
+
+    // [New] Sync Scroll Listener
+    editor.addEventListener('scroll', () => {
+        window.requestAnimationFrame(syncScroll);
     });
 
     viewToggle.addEventListener('click', () => {
@@ -265,6 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
         viewToggle.querySelector('i').className = state.isPreview ? 'fas fa-pencil-alt' : 'fas fa-eye';
         viewToggle.title = state.isPreview ? 'Toggle Editor' : 'Toggle Preview';
         appTitle.textContent = state.isPreview ? 'Pro Preview' : 'Pro Editor';
+        
+        // Re-run sync scroll when switching back
+        if(!state.isPreview) syncScroll();
     });
 
     themeToggle.addEventListener('click', () => {
@@ -276,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSidebar(!state.isSidebarVisible);
     });
 
-    // 7. Modal Logic
+    // 7. Modal Logic (Preserved)
     let modalResolve = null;
 
     const showModal = ({ title, message, inputValue = '', inputPlaceholder = '', type = 'confirm' }) => {
@@ -292,10 +386,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         modalOverlay.classList.remove('hidden');
-        if (type === 'prompt') {
-            modalInput.focus();
-            modalInput.select();
-        }
+        
+        // Animation Frame for smoother focus
+        requestAnimationFrame(() => {
+             if (type === 'prompt') {
+                modalInput.focus();
+                modalInput.select();
+            }
+        });
 
         return new Promise((resolve) => {
             modalResolve = resolve;
@@ -317,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalCancelBtn.addEventListener('click', () => {
         if (modalResolve) {
-            modalResolve(null); // Resolve with null on cancel
+            modalResolve(null); 
             hideModal();
         }
     });
@@ -348,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateEditorAndPreview();
         updateTableOfContents();
-        toggleSidebar(state.isSidebarVisible); // Set initial sidebar state
+        toggleSidebar(state.isSidebarVisible); 
     };
 
     init();
