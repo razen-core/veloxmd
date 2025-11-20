@@ -1,8 +1,8 @@
 /* --- 1. Theming and Variables --- */
 :root {
-    --font-sans: 'Poppins', sans-serif;
-    --font-header: 'Rubik', sans-serif;
-    --font-mono: 'Google Sans Code', monospace;
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-header: 'Outfit', sans-serif;
+    --font-mono: 'JetBr', monospace;
 
     /* Light Theme - Premium Modern */
     --bg-primary: #fefefe;
