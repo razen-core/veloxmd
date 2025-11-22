@@ -1,3 +1,5 @@
+import { listFiles, renameFile, deleteFile, readFile, writeFile, loadConfig } from './fs-helpers.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const documentsGrid = document.getElementById('documents-grid');
     const copyrightYear = document.getElementById('copyright-year');
@@ -19,38 +21,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Handle creation of a new document
-    newDocumentBtn.addEventListener('click', (e) => {
+    newDocumentBtn.addEventListener('click', async (e) => {
         e.preventDefault();
-        localStorage.setItem('create_new_file', 'true');
-        window.location.href = 'editor.html';
+        const fileId = await createNewFile();
+        window.location.href = `editor.html?file=${fileId}`;
     });
 
-    const saveFiles = () => {
-        localStorage.setItem('markdown_files', JSON.stringify(files));
-    };
-
-    const loadFiles = () => {
-        files = JSON.parse(localStorage.getItem('markdown_files') || '[]');
+    const loadFiles = async () => {
+        files = await listFiles();
+        renderDocuments();
     };
 
     const renderDocuments = () => {
         if (documentsGrid) {
-            const sortedFiles = files.sort((a, b) => {
-                const timeA = parseInt(a.id.split('_')[1], 10);
-                const timeB = parseInt(b.id.split('_')[1], 10);
-                return timeB - timeA;
-            });
-
-            if (sortedFiles.length > 0) {
-                documentsGrid.innerHTML = sortedFiles.map(file => `
+            if (files.length > 0) {
+                documentsGrid.innerHTML = files.map(file => `
                     <div class="document-card">
                         <a href="editor.html?file=${file.id}" class="document-card-link">
                             <h3 class="document-title">${file.name}</h3>
                         </a>
                         <div class="document-info">
-                             <p class="document-date">
-                                ${new Date(parseInt(file.id.split('_')[1], 10)).toLocaleDateString()}
-                            </p>
                             <div class="document-actions">
                                 <button class="action-btn rename-btn" data-id="${file.id}" title="Rename">
                                     <i class="fas fa-pen"></i>
@@ -108,63 +98,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = files.find(f => f.id === id);
         if (!file) return;
 
-        const newName = await showModal({
+        let newName = await showModal({
             title: 'Rename File',
             message: `Enter a new name for "${file.name}":`,
             type: 'prompt',
-            inputValue: file.name,
+            inputValue: file.name.replace(/\.md$/, ''),
             inputPlaceholder: 'Enter file name'
         });
 
         if (newName && newName.trim() !== '' && newName !== file.name) {
-            file.name = newName.trim();
-            saveFiles();
-            renderDocuments();
+            newName = newName.trim();
+            if (!newName.endsWith('.md')) {
+                newName += '.md';
+            }
+            await renameFile(id, newName);
+            loadFiles();
         }
     };
 
-    const handleDownloadFile = (id) => {
+    const handleDownloadFile = async (id) => {
         const file = files.find(f => f.id === id);
         if (!file) return;
 
-        const blob = new Blob([file.content], { type: 'text/markdown;charset=utf-8' });
+        const content = await readFile(id);
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${file.name.replace(/ /g, '_')}.md`;
+        a.download = file.name;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 
-    const createNewFile = () => {
-        const newId = `file_${Date.now()}`;
+    const createNewFile = async () => {
         const fileNumber = files.length + 1;
-        const newFile = {
-            id: newId,
-            name: `Untitled ${fileNumber}`,
-            content: `# Untitled ${fileNumber}\n\nStart writing your markdown here.`
-        };
-        files.push(newFile);
-        saveFiles();
-        return newFile.id;
+        const newId = `Untitled_${fileNumber}.md`;
+        const content = `# Untitled ${fileNumber}\n\nStart writing your markdown here.`;
+        await writeFile(newId, content);
+        return newId;
     };
 
     const handleDeleteFile = async (id) => {
-        const fileIndex = files.findIndex(f => f.id === id);
-        if (fileIndex === -1) return;
+        const file = files.find(f => f.id === id);
+        if (!file) return;
 
-        const file = files[fileIndex];
         const confirmed = await showModal({
             title: 'Delete File',
             message: `Are you sure you want to delete "${file.name}"? This action cannot be undone.`
         });
 
         if (confirmed) {
-            files.splice(fileIndex, 1);
-            saveFiles();
-            renderDocuments();
+            await deleteFile(id);
+            loadFiles();
         }
     };
 
@@ -217,11 +204,13 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
-    const init = () => {
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        applyTheme(savedTheme);
-        loadFiles();
-        renderDocuments();
+    const init = async () => {
+        const config = await loadConfig();
+        if (config.onandroid === 'false') {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(savedTheme);
+            await loadFiles();
+        }
     };
 
     init();

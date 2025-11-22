@@ -1,3 +1,5 @@
+import { listFiles, readFile, writeFile, renameFile, deleteFile, loadConfig } from './fs-helpers.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Element Selection
     const editor = document.getElementById('editor');
@@ -101,8 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updatePreview = () => {
-        const activeFile = state.files.find(f => f.id === state.activeFileId);
-        const content = activeFile ? activeFile.content : '';
+        const content = editor.value;
         
         // 1. Parse Markdown
         const newHTML = marked.parse(content);
@@ -143,39 +144,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const performSave = () => {
-        const { files, activeFileId } = state;
-        localStorage.setItem('markdown_files', JSON.stringify(files));
-        localStorage.setItem('active_file_id', activeFileId);
+    const performSave = async () => {
+        if (state.activeFileId) {
+            await writeFile(state.activeFileId, editor.value);
+        }
     };
 
-    const loadState = () => {
-        const savedFiles = localStorage.getItem('markdown_files');
-        const savedActiveId = localStorage.getItem('active_file_id');
+    const loadState = async (fileIdToLoad = null) => {
+        state.files = await listFiles();
 
-        if (savedFiles) {
-            state.files = JSON.parse(savedFiles);
+        if (fileIdToLoad) {
+            state.activeFileId = fileIdToLoad;
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileIdFromUrl = urlParams.get('file');
+
+            if (fileIdFromUrl && state.files.find(f => f.id === fileIdFromUrl)) {
+                state.activeFileId = fileIdFromUrl;
+            } else if (state.files.length > 0) {
+                state.activeFileId = state.files[0].id;
+            }
         }
 
-        if (savedActiveId) {
-            state.activeFileId = savedActiveId;
+        if (state.activeFileId) {
+            const content = await readFile(state.activeFileId);
+            editor.value = content;
+        } else {
+            editor.value = '';
         }
-
-        if (state.files.length === 0) {
-            createNewFile(false); 
-        }
-
-        if (!state.activeFileId || !state.files.find(f => f.id === state.activeFileId)) {
-            state.activeFileId = state.files[0]?.id || null;
-        }
+        updateEditorAndPreview();
     };
 
     const updateTableOfContents = () => {
-        const activeFile = state.files.find(f => f.id === state.activeFileId);
-        if (!activeFile) return;
-
+        const content = editor.value;
         // Regex optimization
-        const headings = activeFile.content.match(/^#{1,6}\s.*$/gm) || [];
+        const headings = content.match(/^#{1,6}\s.*$/gm) || [];
         
         if (headings.length > 0) {
             const tocHTML = headings.map(heading => {
@@ -198,16 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateEditorAndPreview = () => {
-        const activeFile = state.files.find(f => f.id === state.activeFileId);
-        if (activeFile) {
-            if (editor.value !== activeFile.content) {
-                editor.value = activeFile.content;
-            }
-        } else {
-            editor.value = ''; 
-        }
         updatePreview();
         updateStats();
+        updateTableOfContents();
     };
     
     const applyTheme = (theme) => {
@@ -236,59 +232,61 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 5. File Operations (Preserved Exact Logic)
-    const createNewFile = (save = true) => {
-        const newId = `file_${Date.now()}`;
+    const createNewFile = async () => {
         const fileNumber = state.files.length + 1;
-        const newFile = {
-            id: newId,
-            name: `Untitled ${fileNumber}`,
-            content: `# Untitled ${fileNumber}\n\nStart writing your markdown here.`
-        };
-        state.files.push(newFile);
+        const newId = `Untitled_${fileNumber}.md`;
+        const content = `# Untitled ${fileNumber}\n\nStart writing your markdown here.`;
+        await writeFile(newId, content);
         state.activeFileId = newId;
-
+        editor.value = content;
         updateEditorAndPreview();
-        if (save) saveState();
     };
+
 
     // Note: This function is internal. If you use it in HTML (onclick), 
     // you must attach it to window or use event listeners.
     // Assuming internal usage based on provided code.
-    const switchActiveFile = (id) => {
+    const switchActiveFile = async (id) => {
         if (id === state.activeFileId) return;
         state.activeFileId = id;
-
+        const content = await readFile(id);
+        editor.value = content;
         updateEditorAndPreview();
-        saveState();
     };
 
     const handleRenameFile = async (id) => {
         const file = state.files.find(f => f.id === id);
         if (!file) return;
 
-        const newName = await showModal({
+        let newName = await showModal({
             title: 'Rename File',
             message: `Enter a new name for "${file.name}":`,
             type: 'prompt',
-            inputValue: file.name,
+            inputValue: file.name.replace(/\.md$/, ''),
             inputPlaceholder: 'Enter file name'
         });
 
         if (newName && newName.trim() !== '' && newName !== file.name) {
-            file.name = newName.trim();
-            saveState();
+            newName = newName.trim();
+            if (!newName.endsWith('.md')) {
+                newName += '.md';
+            }
+            const wasActive = state.activeFileId === id;
+            await renameFile(id, newName);
+            if (wasActive) {
+                state.activeFileId = newName;
+            }
+            loadState(state.activeFileId);
         }
     };
     
-    const handleDownloadFile = (id) => {
-        const file = state.files.find(f => f.id === id);
-        if (!file) return;
-
-        const blob = new Blob([file.content], { type: 'text/markdown;charset=utf-8' });
+    const handleDownloadFile = async (id) => {
+        const content = await readFile(id);
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${file.name.replace(/ /g, '_')}.md`;
+        a.download = id;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -309,19 +307,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        state.files.splice(fileIndex, 1);
+        const wasActive = state.activeFileId === id;
+        await deleteFile(id);
 
-        if (state.activeFileId === id) {
+        if (wasActive) {
+            state.files.splice(fileIndex, 1);
+            let nextFileId = null;
             if (state.files.length > 0) {
-                const newActiveIndex = Math.max(0, fileIndex - 1);
-                state.activeFileId = state.files[newActiveIndex].id;
-            } else {
-                createNewFile(false);
+                const newIndex = Math.max(0, fileIndex - 1);
+                nextFileId = state.files[newIndex].id;
             }
+            loadState(nextFileId);
+        } else {
+            loadState(state.activeFileId);
         }
-
-        updateEditorAndPreview();
-        saveState();
     };
 
     // 6. Event Listeners
@@ -330,18 +329,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const debouncedSaveState = debounce(saveState, 1000); // Lazy save
 
     editor.addEventListener('input', () => {
-        const activeFile = state.files.find(f => f.id === state.activeFileId);
-        if (activeFile) {
-            activeFile.content = editor.value;
+        // Instant Stats Update
+        updateStats();
 
-            // Instant Stats Update
-            updateStats();
-
-            // Smart Schedule
-            debouncedUpdatePreview();
-            debouncedUpdateTOC();
-            debouncedSaveState();
-        }
+        // Smart Schedule
+        debouncedUpdatePreview();
+        debouncedUpdateTOC();
+        debouncedSaveState();
     });
 
     // [New] Sync Scroll Listener
@@ -430,23 +424,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 8. Initialization
-    const init = () => {
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        applyTheme(savedTheme);
+    const init = async () => {
+        const config = await loadConfig();
+        if (config.onandroid === 'false') {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(savedTheme);
 
-        // Check for file ID in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const fileIdFromUrl = urlParams.get('file');
+            await loadState();
 
-        loadState();
-
-        if (fileIdFromUrl && state.files.find(f => f.id === fileIdFromUrl)) {
-            state.activeFileId = fileIdFromUrl;
+            updateTableOfContents();
+            toggleSidebar(state.isSidebarVisible);
         }
-
-        updateEditorAndPreview();
-        updateTableOfContents();
-        toggleSidebar(state.isSidebarVisible); 
     };
 
     init();
