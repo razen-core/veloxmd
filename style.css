@@ -2,7 +2,7 @@
 :root {
     --font-sans: 'Manrope', sans-serif;
     --font-header: 'Outfit', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-mono: 'PT Mono', monospace;
 
     /* Light Theme - Premium Modern */
     --bg-primary: #fefefe;
@@ -747,8 +747,6 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
-    position: relative;
-    min-height: 200px;
 }
 
 .document-card {
@@ -904,44 +902,5 @@ body {
         height: 48px;
         padding: 0;
         justify-content: center;
-    }
-}
-
-/* Loading Spinner */
-.loading-spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 50px;
-    height: 50px;
-    border: 5px solid var(--border-color);
-    border-top-color: var(--accent-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    opacity: 1;
-    transition: opacity 0.3s ease-in-out;
-}
-.loading-spinner.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-@keyframes spin {
-    to {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
-}
-
-/* Card Animation */
-.document-card {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: card-fade-in 0.5s forwards;
-}
-
-@keyframes card-fade-in {
-    to {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
