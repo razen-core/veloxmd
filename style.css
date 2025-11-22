@@ -737,7 +737,6 @@ body {
 
 .cta-button:hover {
     background-color: var(--accent-hover);
-    transform: translateY(-2px);
 }
 
 [data-theme='dark'] .cta-button {
