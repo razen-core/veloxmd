@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderDocuments = () => {
+        const spinner = documentsGrid.querySelector('.loading-spinner');
         if (documentsGrid) {
             const sortedFiles = files.sort((a, b) => {
                 const timeA = parseInt(a.id.split('_')[1], 10);
@@ -37,9 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return timeB - timeA;
             });
 
+            // Selectively remove only document cards and the empty message
+            documentsGrid.querySelectorAll('.document-card, .no-documents-message').forEach(el => el.remove());
+
             if (sortedFiles.length > 0) {
-                documentsGrid.innerHTML = sortedFiles.map(file => `
-                    <div class="document-card">
+                const fragment = document.createDocumentFragment();
+                sortedFiles.forEach((file, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'document-card';
+                    card.style.animationDelay = `${index * 50}ms`;
+                    card.innerHTML = `
                         <a href="editor.html?file=${file.id}" class="document-card-link">
                             <h3 class="document-title">${file.name}</h3>
                         </a>
@@ -59,15 +67,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                    fragment.appendChild(card);
+                });
+                documentsGrid.appendChild(fragment);
+
             } else {
-                documentsGrid.innerHTML = `
-                    <div class="no-documents-message">
-                        <h3>You don't have any documents yet.</h3>
-                        <p>Click the "New Document" button to get started.</p>
-                    </div>
+                const noDocsMessage = document.createElement('div');
+                noDocsMessage.className = 'no-documents-message';
+                noDocsMessage.innerHTML = `
+                    <h3>You don't have any documents yet.</h3>
+                    <p>Click the "New Document" button to get started.</p>
                 `;
+                documentsGrid.appendChild(noDocsMessage);
+            }
+             // Hide spinner after rendering
+             if (spinner) {
+                spinner.remove();
             }
         }
     };
@@ -216,6 +232,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const init = async () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
+
+        const spinner = documentsGrid.querySelector('.loading-spinner');
+        if(spinner) spinner.classList.remove('hidden');
+
         await loadFiles();
         renderDocuments();
     };
