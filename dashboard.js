@@ -25,12 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'editor.html';
     });
 
-    const saveFiles = () => {
-        localStorage.setItem('markdown_files', JSON.stringify(files));
-    };
-
-    const loadFiles = () => {
-        files = JSON.parse(localStorage.getItem('markdown_files') || '[]');
+    const loadFiles = async () => {
+        files = await RazenFS.getAllFiles();
     };
 
     const renderDocuments = () => {
@@ -118,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (newName && newName.trim() !== '' && newName !== file.name) {
             file.name = newName.trim();
-            saveFiles();
+            await RazenFS.saveFile(file);
             renderDocuments();
         }
     };
@@ -162,8 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (confirmed) {
+            await RazenFS.deleteFile(id);
             files.splice(fileIndex, 1);
-            saveFiles();
             renderDocuments();
         }
     };
@@ -217,10 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
-    const init = () => {
+    const init = async () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
-        loadFiles();
+        await loadFiles();
         renderDocuments();
     };
 

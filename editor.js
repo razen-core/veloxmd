@@ -143,29 +143,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const performSave = () => {
-        const { files, activeFileId } = state;
-        localStorage.setItem('markdown_files', JSON.stringify(files));
-        localStorage.setItem('active_file_id', activeFileId);
+    const performSave = async () => {
+        const activeFile = state.files.find(f => f.id === state.activeFileId);
+        if (activeFile) {
+            await RazenFS.saveFile(activeFile);
+        }
     };
 
-    const loadState = () => {
-        const savedFiles = localStorage.getItem('markdown_files');
-        const savedActiveId = localStorage.getItem('active_file_id');
+    const loadState = async () => {
+        state.files = await RazenFS.getAllFiles();
 
-        if (savedFiles) {
-            state.files = JSON.parse(savedFiles);
-        }
-
-        if (savedActiveId) {
-            state.activeFileId = savedActiveId;
+        // Check for a flag from dashboard.js to create a new file
+        if (localStorage.getItem('create_new_file') === 'true') {
+            localStorage.removeItem('create_new_file');
+            const newFileId = await createNewFile();
+            // Redirect to the new file's URL to ensure clean state
+            window.location.replace(`editor.html?file=${newFileId}`);
+            return; // Stop execution to allow redirect
         }
 
         if (state.files.length === 0) {
-            createNewFile(false); 
+            await createNewFile();
         }
 
-        if (!state.activeFileId || !state.files.find(f => f.id === state.activeFileId)) {
+        // Determine active file from URL or fallback
+        const urlParams = new URLSearchParams(window.location.search);
+        const fileIdFromUrl = urlParams.get('file');
+
+        if (fileIdFromUrl && state.files.find(f => f.id === fileIdFromUrl)) {
+            state.activeFileId = fileIdFromUrl;
+        } else if (!state.activeFileId || !state.files.find(f => f.id === state.activeFileId)) {
             state.activeFileId = state.files[0]?.id || null;
         }
     };
@@ -236,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 5. File Operations (Preserved Exact Logic)
-    const createNewFile = (save = true) => {
+    const createNewFile = async () => {
         const newId = `file_${Date.now()}`;
         const fileNumber = state.files.length + 1;
         const newFile = {
@@ -247,8 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
         state.files.push(newFile);
         state.activeFileId = newId;
 
+        await RazenFS.saveFile(newFile);
         updateEditorAndPreview();
-        if (save) saveState();
+        return newId; // Return the ID for redirects
     };
 
     // Note: This function is internal. If you use it in HTML (onclick), 
@@ -258,8 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id === state.activeFileId) return;
         state.activeFileId = id;
 
+        // Update URL without reloading the page for better UX
+        const url = new URL(window.location);
+        url.searchParams.set('file', id);
+        history.pushState({}, '', url);
+
         updateEditorAndPreview();
-        saveState();
     };
 
     const handleRenameFile = async (id) => {
@@ -276,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (newName && newName.trim() !== '' && newName !== file.name) {
             file.name = newName.trim();
-            saveState();
+            await RazenFS.saveFile(file);
         }
     };
     
@@ -309,19 +321,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        await RazenFS.deleteFile(id);
         state.files.splice(fileIndex, 1);
 
         if (state.activeFileId === id) {
             if (state.files.length > 0) {
                 const newActiveIndex = Math.max(0, fileIndex - 1);
-                state.activeFileId = state.files[newActiveIndex].id;
+                switchActiveFile(state.files[newActiveIndex].id);
             } else {
-                createNewFile(false);
+                await createNewFile();
             }
         }
 
+        // No need to saveState, as delete is already persisted
         updateEditorAndPreview();
-        saveState();
     };
 
     // 6. Event Listeners
@@ -430,23 +443,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 8. Initialization
-    const init = () => {
+    const init = async () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
 
-        // Check for file ID in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const fileIdFromUrl = urlParams.get('file');
+        await loadState();
 
-        loadState();
-
-        if (fileIdFromUrl && state.files.find(f => f.id === fileIdFromUrl)) {
-            state.activeFileId = fileIdFromUrl;
+        // If loadState triggered a redirect, the rest of this won't run
+        if (state.files.length > 0) {
+            updateEditorAndPreview();
+            updateTableOfContents();
+            toggleSidebar(state.isSidebarVisible);
         }
-
-        updateEditorAndPreview();
-        updateTableOfContents();
-        toggleSidebar(state.isSidebarVisible); 
     };
 
     init();
