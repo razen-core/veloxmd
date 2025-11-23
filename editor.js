@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         files: [],
         activeFileId: null,
         isPreview: false,
-        isSidebarVisible: true,
+        isSidebarVisible: false,
     };
 
     // 3. Modern Tech Setup (Performance Observers)
