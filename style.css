@@ -1008,23 +1008,34 @@ body {
 /* --- 11. Toolbar Responsiveness --- */
 @media (max-width: 768px) {
     .floating-toolbar {
-        width: 100%;
-        bottom: 0;
-        left: 0;
-        transform: none;
-        border-radius: 0;
-        justify-content: center;
-        padding: 0.5rem;
+        width: auto;
+        max-width: calc(100vw - 20px); /* Leave some space on the sides */
+        bottom: 10px; /* A bit closer to the bottom on mobile */
+        /* It will inherit left: 50% and transform: translateX(-50%) from the base style */
+        padding: 0.5rem 1rem; /* Add horizontal padding */
+        justify-content: flex-start; /* Align content to the start */
+        overflow: hidden; /* Hide anything that might spill from children */
     }
 
     .floating-toolbar.hidden {
-        transform: translateY(100%);
+        /* Keep the hidden transform from base style for consistency */
+        transform: translateX(-50%) translateY(150%);
     }
 
     .toolbar-actions {
-        flex-wrap: wrap;
-        justify-content: center;
+        overflow-x: auto; /* Enable horizontal scrolling */
+        overflow-y: hidden; /* Disable vertical scrolling */
+        flex-wrap: nowrap; /* Prevent buttons from wrapping */
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
     }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .toolbar-actions::-webkit-scrollbar {
+        display: none;
+    }
+
 
     .toolbar-drag-handle {
         display: none; /* No dragging on mobile */
