@@ -904,3 +904,126 @@ body {
         justify-content: center;
     }
 }
+
+/* --- 10. Floating Toolbar --- */
+.floating-toolbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 30px;
+    box-shadow: var(--shadow-medium);
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    z-index: 100;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.floating-toolbar.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(150%);
+    pointer-events: none;
+}
+
+.toolbar-drag-handle {
+    cursor: move;
+    color: var(--text-secondary);
+    padding: 0 0.5rem;
+}
+
+.toolbar-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.toolbar-btn, .toolbar-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.toolbar-btn:hover, .toolbar-close-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.toolbar-btn:active, .toolbar-close-btn:active {
+    transform: scale(0.9);
+}
+
+.toolbar-close-btn {
+    margin-left: 0.5rem;
+}
+
+.show-toolbar-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    box-shadow: var(--shadow-medium);
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+[data-theme='dark'] .show-toolbar-btn {
+    color: var(--bg-primary);
+}
+
+.show-toolbar-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+.show-toolbar-btn.hidden {
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+}
+
+
+/* --- 11. Toolbar Responsiveness --- */
+@media (max-width: 768px) {
+    .floating-toolbar {
+        width: 100%;
+        bottom: 0;
+        left: 0;
+        transform: none;
+        border-radius: 0;
+        justify-content: center;
+        padding: 0.5rem;
+    }
+
+    .floating-toolbar.hidden {
+        transform: translateY(100%);
+    }
+
+    .toolbar-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .toolbar-drag-handle {
+        display: none; /* No dragging on mobile */
+    }
+}

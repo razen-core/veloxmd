@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="fs-helpers.js" defer></script>
     <script src="editor.js" defer></script>
+    <script src="toolbar.js" defer></script>
 </head>
 <body>
     <div id="app-container">
@@ -81,5 +82,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Toolbar -->
+    <div id="floating-toolbar" class="floating-toolbar">
+        <div class="toolbar-drag-handle">
+            <i class="fas fa-grip-horizontal"></i>
+        </div>
+        <div class="toolbar-actions">
+            <!-- Action buttons -->
+            <button class="toolbar-btn" data-action="insert-tab" title="Insert Tab"><i class="fas fa-indent"></i></button>
+            <button class="toolbar-btn" data-action="insert-pair" data-pair="()" title="Insert Parentheses ()"><i class="fas fa-parentheses"></i></button>
+            <button class="toolbar-btn" data-action="insert-pair" data-pair="{}" title="Insert Braces {}"><i class="fas fa-brackets-curly"></i></button>
+            <button class="toolbar-btn" data-action="insert-pair" data-pair="[]" title="Insert Brackets []"><i class="fas fa-brackets-square"></i></button>
+            <button class="toolbar-btn" data-action="move-left" title="Move Left"><i class="fas fa-arrow-left"></i></button>
+            <button class="toolbar-btn" data-action="move-right" title="Move Right"><i class="fas fa-arrow-right"></i></button>
+            <button class="toolbar-btn" data-action="move-up" title="Move Up"><i class="fas fa-arrow-up"></i></button>
+            <button class="toolbar-btn" data-action="move-down" title="Move Down"><i class="fas fa-arrow-down"></i></button>
+        </div>
+        <button class="toolbar-close-btn" title="Close Toolbar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Toolbar toggle button (hidden by default) -->
+    <button id="show-toolbar-btn" class="show-toolbar-btn hidden" title="Show Toolbar">
+        <i class="fas fa-tools"></i>
+    </button>
 </body>
 </html>
