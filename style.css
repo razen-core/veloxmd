@@ -1001,6 +1001,9 @@ body {
     pointer-events: none;
 }
 
+.is-dragging-toolbar {
+    user-select: none;
+}
 
 /* --- 11. Toolbar Responsiveness --- */
 @media (max-width: 768px) {

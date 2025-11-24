@@ -87,12 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Event listener for toolbar buttons
-    toolbar.addEventListener('click', (e) => {
-        const button = e.target.closest('.toolbar-btn');
-        if (!button) {
-            return;
-        }
-
+    const handleToolbarAction = (button) => {
         const action = button.dataset.action;
         const pair = button.dataset.pair;
 
@@ -115,6 +110,21 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'move-down':
                 moveCaretVertical('down');
                 break;
+        }
+    };
+
+    toolbar.addEventListener('click', (e) => {
+        const button = e.target.closest('.toolbar-btn');
+        if (button) {
+            handleToolbarAction(button);
+        }
+    });
+
+    toolbar.addEventListener('mousedown', (e) => {
+        // Prevent editor from losing focus
+        const button = e.target.closest('.toolbar-btn');
+        if (button) {
+            e.preventDefault();
         }
     });
 
@@ -141,37 +151,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let offsetX, offsetY;
 
     if (dragHandle) {
-        dragHandle.addEventListener('mousedown', (e) => {
-            // Prevent text selection while dragging
-            e.preventDefault();
-
+        const onDragStart = (e) => {
             isDragging = true;
 
-            // If the element is centered with transform, we need to convert `left` to pixels first
             const styles = window.getComputedStyle(toolbar);
             if (styles.transform !== 'none') {
                 toolbar.style.left = `${toolbar.offsetLeft}px`;
                 toolbar.style.transform = 'none';
             }
 
-            offsetX = e.clientX - toolbar.offsetLeft;
-            offsetY = e.clientY - toolbar.offsetTop;
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+
+            offsetX = clientX - toolbar.offsetLeft;
+            offsetY = clientY - toolbar.offsetTop;
 
             toolbar.style.cursor = 'grabbing';
-            document.body.style.userSelect = 'none'; // Prevent text selection on the body
+            document.body.classList.add('is-dragging-toolbar');
 
-            // Attach follow-up events to the window
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        });
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragEnd);
+            window.addEventListener('touchmove', onDragMove);
+            window.addEventListener('touchend', onDragEnd);
+        };
 
-        const onMouseMove = (e) => {
+        const onDragMove = (e) => {
             if (!isDragging) return;
 
-            let x = e.clientX - offsetX;
-            let y = e.clientY - offsetY;
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
 
-            // Constrain the toolbar to the viewport
+            let x = clientX - offsetX;
+            let y = clientY - offsetY;
+
             const maxX = window.innerWidth - toolbar.offsetWidth;
             const maxY = window.innerHeight - toolbar.offsetHeight;
 
@@ -182,15 +194,19 @@ document.addEventListener('DOMContentLoaded', () => {
             toolbar.style.top = `${y}px`;
         };
 
-        const onMouseUp = () => {
+        const onDragEnd = () => {
             if (!isDragging) return;
             isDragging = false;
             toolbar.style.cursor = 'move';
-            document.body.style.userSelect = ''; // Re-enable text selection
+            document.body.classList.remove('is-dragging-toolbar');
 
-            // Clean up global event listeners
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
+            window.removeEventListener('mousemove', onDragMove);
+            window.removeEventListener('mouseup', onDragEnd);
+            window.removeEventListener('touchmove', onDragMove);
+            window.removeEventListener('touchend', onDragEnd);
         };
+
+        dragHandle.addEventListener('mousedown', onDragStart);
+        dragHandle.addEventListener('touchstart', onDragStart);
     }
 });
