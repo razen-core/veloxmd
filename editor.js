@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         preview.classList.toggle('hidden', !state.isPreview);
         viewToggle.querySelector('i').className = state.isPreview ? 'fas fa-pencil-alt' : 'fas fa-eye';
         viewToggle.title = state.isPreview ? 'Toggle Editor' : 'Toggle Preview';
-        appTitle.textContent = state.isPreview ? 'Pro Preview' : 'Pro Editor';
+        appTitle.textContent = state.isPreview ? 'Velox Preview' : 'Velox Editor';
         
         // Re-run sync scroll when switching back
         if(!state.isPreview) syncScroll();
