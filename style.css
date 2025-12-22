@@ -110,7 +110,7 @@ body {
     color: var(--text-primary);
 }
 
-#app-header .controls button {
+#app-header .controls button, #ai-modal-close-btn {
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -1139,6 +1139,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 0.5rem;
+    align-items: center;
 }
 
 #ai-input {
@@ -1149,7 +1150,7 @@ body {
     font-family: var(--font-sans);
     font-size: 1rem;
     color: var(--text-primary);
-    height: 50px;
+    height: 40px;
     padding: 0.5rem;
 }
 
@@ -1227,10 +1228,12 @@ body {
     color: white;
     align-self: flex-end;
     margin-left: auto;
+    width: auto;
+    max-width: 200px;
 }
 
 .ai-message {
-    background-color: var(--bg-secondary);
+    background-color: transparent;
     color: var(--text-primary);
     align-self: flex-start;
 }
