@@ -1137,7 +1137,7 @@ body {
     display: flex;
     gap: 0.5rem;
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 32px;
     padding: 0.5rem;
     align-items: center;
 }
@@ -1170,6 +1170,10 @@ body {
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.2s;
+}
+
+#ai-send-btn i {
+    font-size: 1rem;
 }
 
 #ai-send-btn:hover {
