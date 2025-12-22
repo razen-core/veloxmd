@@ -25,6 +25,7 @@
     <script src="fs-helpers.js" defer></script>
     <script src="editor.js" defer></script>
     <script src="toolbar.js" defer></script>
+    <script src="ai.js" defer></script>
 </head>
 <body>
     <div id="app-container">
@@ -44,6 +45,9 @@
                 </button>
                 <button id="theme-toggle" title="Toggle Theme">
                     <i class="fa-solid fa-moon"></i>
+                </button>
+                <button id="settings-btn" title="Settings">
+                    <i class="fa-solid fa-cog"></i>
                 </button>
             </div>
         </header>
@@ -121,10 +125,51 @@
             <button class="toolbar-btn" data-action="move-down" title="Move Down">
                 <i class="fa-solid fa-arrow-down"></i>
             </button>
+            <button id="ai-mode-btn" class="toolbar-btn" title="AI Mode">
+                <i class="fa-solid fa-sparkles"></i>
+            </button>
         </div>
         <button class="toolbar-close-btn" title="Close Toolbar">
             <i class="fa-solid fa-xmark"></i>
         </button>
+    </div>
+
+    <!-- AI Modal -->
+    <div id="ai-modal-overlay" class="hidden">
+        <div id="ai-modal">
+            <div id="ai-modal-header">
+                <h2>AI Assistant</h2>
+                <button id="ai-modal-close-btn">&times;</button>
+            </div>
+            <div id="ai-modal-body">
+                <div id="ai-chat-container"></div>
+                <div id="ai-input-container">
+                    <textarea id="ai-input" placeholder="Ask AI to write, edit, or brainstorm..."></textarea>
+                    <button id="ai-send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal-overlay" class="hidden">
+        <div id="settings-modal">
+            <div id="settings-modal-header">
+                <h2>Settings</h2>
+                <button id="settings-modal-close-btn">&times;</button>
+            </div>
+            <div id="settings-modal-body">
+                <div class="settings-field">
+                    <label for="api-key-input">Gemini API Key</label>
+                    <input type="password" id="api-key-input" placeholder="Enter your API key">
+                </div>
+                <div id="settings-modal-actions">
+                    <button id="settings-save-btn">Save</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toolbar toggle button (hidden by default) -->
