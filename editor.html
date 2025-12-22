@@ -138,7 +138,16 @@
     <div id="ai-modal-overlay" class="hidden">
         <div id="ai-modal">
             <div id="ai-modal-header">
-                <h2>AI Assistant</h2>
+                <div class="header-left-content">
+                    <h2>AI Assistant</h2>
+                    <div class="model-selector-container">
+                        <i class="fa-solid fa-robot"></i>
+                        <select id="ai-model-selector">
+                            <option value="models/gemini-3-flash-preview">Gemini 3.0 Flash</option>
+                            <option value="models/gemini-flash-latest">Gemini 2.5 Flash</option>
+                        </select>
+                    </div>
+                </div>
                 <button id="ai-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="ai-modal-body">

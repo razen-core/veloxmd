@@ -37,10 +37,13 @@ document.addEventListener('DOMContentLoaded', () => {
             fullPrompt = prompt.replace('@code', `\n\n\`\`\`\n${editor.value}\n\`\`\`\n\n`);
         }
 
-        appendMessage('ai', 'Thinking...', true);
+        const model = document.getElementById('ai-model-selector').value;
+        const streaming = true; // For this example, we'll always stream
+
+        appendMessage('ai', '', true); // Add a placeholder for the AI response
 
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:${streaming ? 'streamGenerateContent' : 'generateContent'}?key=${apiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -58,13 +61,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`API request failed with status ${response.status}`);
             }
 
-            const data = await response.json();
-            const aiResponse = data.candidates[0].content.parts[0].text;
-            updateLastMessage(aiResponse);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+
+            while (true) {
+                const {
+                    done,
+                    value
+                } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, {
+                    stream: true
+                });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const json = JSON.parse(line.substring(6));
+                            if (json.candidates && json.candidates[0].content.parts[0].text) {
+                                const text = json.candidates[0].content.parts[0].text;
+                                accumulatedText += text;
+                                updateLastMessage(accumulatedText, false);
+                            }
+                        } catch (error) {
+                            console.error('Error parsing streaming JSON:', error);
+                        }
+                    }
+                }
+            }
+
+            // Final update to add the "Replace Code" button if applicable
+            updateLastMessage(accumulatedText, true);
+
 
         } catch (error) {
             console.error('Error fetching AI response:', error);
-            updateLastMessage('Sorry, I encountered an error. Please try again.');
+            updateLastMessage('Sorry, I encountered an error. Please try again.', true);
         }
     }
 
@@ -80,23 +115,30 @@ document.addEventListener('DOMContentLoaded', () => {
         aiChatContainer.scrollTop = aiChatContainer.scrollHeight;
     }
 
-    function updateLastMessage(text) {
+    function updateLastMessage(text, isFinal) {
         const lastMessage = aiChatContainer.querySelector('.ai-message:last-child');
         if (lastMessage) {
-            lastMessage.innerHTML = ''; // Clear spinner
-            lastMessage.textContent = text;
+            // Render markdown content
+            lastMessage.innerHTML = marked.parse(text);
 
-            const codeBlocks = text.match(/```(\w+)?\n([\s\S]*?)```/g);
-            if (codeBlocks) {
-                const replaceBtn = document.createElement('button');
-                replaceBtn.textContent = 'Replace Code';
-                replaceBtn.classList.add('replace-code-btn');
-                replaceBtn.onclick = () => {
-                    const codeToInsert = codeBlocks.map(block => block.replace(/```(\w+)?\n|```/g, '')).join('\n');
-                    editor.value = codeToInsert;
-                    aiModalOverlay.classList.add('hidden');
-                };
-                lastMessage.appendChild(replaceBtn);
+            // Highlight code blocks
+            lastMessage.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
+            if (isFinal) {
+                const codeBlocks = text.match(/```(\w+)?\n([\s\S]*?)```/g);
+                if (codeBlocks) {
+                    const replaceBtn = document.createElement('button');
+                    replaceBtn.textContent = 'Replace Code';
+                    replaceBtn.classList.add('replace-code-btn');
+                    replaceBtn.onclick = () => {
+                        const codeToInsert = codeBlocks.map(block => block.replace(/```(\w+)?\n|```/g, '')).join('\n');
+                        editor.value = codeToInsert;
+                        aiModalOverlay.classList.add('hidden');
+                    };
+                    lastMessage.appendChild(replaceBtn);
+                }
             }
         }
     }

@@ -1262,3 +1262,51 @@ body {
     padding: 0.5rem 1rem;
     cursor: pointer;
 }
+
+.model-selector-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.model-selector-container i {
+    color: var(--text-secondary);
+}
+
+#ai-model-selector {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.25rem 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+}
+
+#ai-model-selector:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.header-left-content {
+    display: flex;
+    align-items: center;
+}
+
+.ai-message pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: var(--code-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.ai-message code {
+    font-family: var(--font-mono);
+}
+
+.ai-message p {
+    margin-bottom: 1rem;
+}
