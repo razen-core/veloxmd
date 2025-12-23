@@ -1,40 +1,63 @@
 /* --- 1. Theming and Variables --- */
 :root {
+    /* Fonts - Preserving your original choices */
     --font-sans: 'Lexend', sans-serif;
     --font-header: 'Outfit', sans-serif;
     --font-mono: 'PT Mono', monospace;
 
     /* Light Theme - Premium Modern */
-    --bg-primary: #fefefe;
-    --bg-secondary: #f8fafc;
-    --text-primary: #0f172a;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-    --accent-color: #3b82f6;
-    --accent-hover: #2563eb;
-    --code-bg: #f1f5f9;
-    --code-text: #334155;
-    --hljs-bg: #f8fafc;
-    --hljs-text: #475569;
-    --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --bg-primary: oklch(0.99 0.002 270);     /* Clean off-white */
+    --bg-secondary: oklch(0.98 0.004 270);   /* Subtle slate background */
+    --text-primary: oklch(0.18 0.020 270);   /* Deep slate-charcoal */
+    --text-secondary: oklch(0.55 0.025 270); /* Muted gray-blue */
+    --border-color: oklch(0.92 0.010 270);   /* Soft refined border */
+    --accent-color: oklch(0.20 0.000 0);     /* True accent black */
+    --accent-hover: oklch(0.40 0.000 0);     /* Soft hover gray */
+    
+    /* Code Styling */
+    --code-bg: oklch(0.96 0.005 270);        /* Integrated from your code-bg */
+    --code-text: oklch(0.35 0.030 270);
+    --hljs-bg: oklch(0.97 0.003 270);
+    --hljs-text: oklch(0.45 0.025 270);
+
+    /* Reference & Missing Variables */
+    --primary: var(--accent-color);
+    --primary-dark: oklch(0.10 0.000 0);
+    --secondary: oklch(0.45 0.015 270);
+    --user-bg: oklch(0.95 0.005 270);        /* From your chat app reference */
+    --ai-bg: oklch(1.00 0.000 0);
+    --error-color: oklch(0.60 0.150 25);     /* Perceptually balanced red */
+    --success-color: oklch(0.65 0.120 150);  /* Soft premium green */
+    --warning-color: oklch(0.85 0.140 85);   /* Modern gold/yellow */
+    
+    /* Shadows & Effects */
+    --shadow-light: 0 1px 3px 0 oklch(0 0 0 / 0.05);
+    --shadow-medium: 0 4px 6px -1px oklch(0 0 0 / 0.1);
+    --float-shadow: 0 8px 20px oklch(0 0 0 / 0.08);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme='dark'] {
-    /* Dark Theme - Premium Modern */
-    --bg-primary: #0f0f0f;
-    --bg-secondary: #1a1a1a;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border-color: #27272a;
-    --accent-color: #60a5fa;
-    --accent-hover: #3b82f6;
-    --code-bg: #1e1e1e;
-    --code-text: #e2e8f0;
-    --hljs-bg: #161616;
-    --hljs-text: #cbd5e1;
-    --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    /* Dark Theme - High Contrast Deep Slate */
+    --bg-primary: oklch(0.12 0.005 270);     /* Deep onyx-slate */
+    --bg-secondary: oklch(0.16 0.008 270);   /* Slightly lighter surface */
+    --text-primary: oklch(0.95 0.010 270);   /* Crisp off-white text */
+    --text-secondary: oklch(0.75 0.020 270); /* Readable muted text */
+    --border-color: oklch(0.24 0.015 270);   /* Sharp, subtle borders */
+    --accent-color: oklch(0.75 0.120 250);   /* Premium blue accent */
+    --accent-hover: oklch(0.65 0.150 255);   /* Vibrant hover state */
+    
+    /* Code & Syntax */
+    --code-bg: oklch(0.18 0.015 270);
+    --code-text: oklch(0.88 0.020 270);
+    --hljs-bg: oklch(0.14 0.010 270);
+    --hljs-text: oklch(0.85 0.025 270);
+
+    /* Dark Mode Utilities */
+    --user-bg: oklch(0.20 0.015 270);
+    --ai-bg: oklch(0.14 0.008 270);
+    --shadow-light: 0 1px 3px 0 oklch(0 0 0 / 0.3);
+    --shadow-medium: 0 4px 12px oklch(0 0 0 / 0.5);
 }
 
 
@@ -1150,7 +1173,7 @@ body {
     font-family: var(--font-sans);
     font-size: 1rem;
     color: var(--text-primary);
-    height: 40px;
+    height: 35px;
     padding: 0.5rem;
 }
 
