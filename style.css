@@ -1279,13 +1279,61 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-.replace-code-btn {
-    display: block;
+#ai-actions-template {
+    display: flex;
+    gap: 0.5rem;
     margin-top: 1rem;
-    background-color: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
+    justify-content: flex-start;
+}
+
+.ai-action-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 1rem;
     cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.ai-action-btn:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Markdown styling inside AI messages */
+.ai-message h1, .ai-message h2, .ai-message h3,
+.user-message h1, .user-message h2, .user-message h3 {
+    font-family: var(--font-header);
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+.ai-message p, .user-message p { margin-bottom: 0.5em; }
+.ai-message ul, .ai-message ol, .user-message ul, .user-message ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.5em;
+}
+.ai-message pre {
+    background-color: var(--hljs-bg);
+    padding: 0.75em;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 0.5em 0;
+}
+.ai-message code {
+    font-family: var(--font-mono);
+    background-color: var(--code-bg);
+    color: var(--code-text);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+}
+.user-message code {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
 }
