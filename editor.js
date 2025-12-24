@@ -362,6 +362,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.requestAnimationFrame(syncScroll);
     });
 
+    editor.addEventListener('save-content', () => {
+        saveState();
+    });
+
     viewToggle.addEventListener('click', () => {
         state.isPreview = !state.isPreview;
         editor.classList.toggle('hidden', state.isPreview);
