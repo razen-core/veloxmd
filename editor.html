@@ -19,6 +19,11 @@
     <!-- JS Libraries: marked for parsing, highlight.js for syntax highlighting -->
     <script src="https://cdn.jsdelivr.net/npm/marked@16.4.1/lib/marked.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
+
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js"></script>
     
     <!-- Custom Styles and Script -->
     <link rel="stylesheet" href="style.css">
@@ -111,6 +116,11 @@
             <!-- Brackets [] -->
             <button class="toolbar-btn" data-action="insert-pair" data-pair="[]" title="Insert Brackets []">
                 <span style="font-size: 16px; font-weight: bold; font-family: var(--font-mono);">[]</span>
+            </button>
+
+            <!-- LaTeX $$ -->
+            <button class="toolbar-btn" data-action="insert-pair" data-pair="$$" title="Insert LaTeX $$">
+                <span style="font-size: 16px; font-weight: bold; font-family: var(--font-mono); font-style: italic;">$$</span>
             </button>
 
             <button class="toolbar-btn" data-action="move-left" title="Move Left">
