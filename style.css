@@ -86,6 +86,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    overflow: hidden;
 }
 
 #app-header {
@@ -231,9 +232,63 @@ body {
     flex-shrink: 0;
 }
 
-#sidebar-header h2 {
-    font-size: 1rem;
+#sidebar-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+}
+
+.sidebar-tabs {
+    display: flex;
+    background-color: var(--bg-primary);
+    border-radius: 999px;
+    padding: 0.25rem;
+    width: 100%;
+    border: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 0.4rem;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
     font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: 999px;
+    transition: var(--transition);
+}
+
+.tab-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+[data-theme='dark'] .tab-btn.active {
+    color: var(--bg-primary);
+}
+
+#new-file-btn-sidebar {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--accent-color);
+    width: 100%;
+    border-radius: 999px;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+#new-file-btn-sidebar:hover {
+    background-color: var(--border-color);
 }
 
 #new-file-btn {
@@ -257,10 +312,13 @@ body {
     color: var(--text-primary);
 }
 
+.sidebar-content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
 #file-list {
     list-style: none;
-    overflow-y: auto;
-    flex-grow: 1;
     padding: 0.5rem;
 }
 
@@ -279,13 +337,13 @@ body {
 }
 
 .file-item.active {
-    background-color: var(--border-color);
-    color: var(--text-primary);
+    background-color: var(--accent-color);
+    color: white;
 }
 
 [data-theme='dark'] .file-item.active {
-    background-color: #2a2a2a; /* A slightly lighter grey for dark mode active state */
-    color: var(--text-primary);
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
 }
 
 
@@ -295,6 +353,15 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 0.9rem;
+}
+
+.file-date-chip {
+    font-size: 0.7rem;
+    background-color: var(--bg-primary);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
 }
 
 .file-item-actions {
@@ -358,6 +425,39 @@ body {
     overflow-y: hidden;
 }
 
+#editor-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#editor-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 1.2rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: transparent;
+    pointer-events: none;
+    overflow-y: auto;
+    border: none;
+}
+
+.search-match {
+    background-color: rgba(255, 255, 0, 0.3);
+    border-radius: 2px;
+}
+
+.search-match.current {
+    background-color: rgba(255, 165, 0, 0.6);
+}
+
 #app-footer {
     padding: 0.5rem 1.5rem;
     border-top: 1px solid var(--border-color);
@@ -380,13 +480,15 @@ body {
 }
 
 #editor {
-    background-color: var(--bg-primary);
+    background-color: transparent;
     color: var(--text-primary);
     border: none;
     resize: none;
     font-family: var(--font-mono);
     font-size: 1rem;
     line-height: 1.7;
+    z-index: 1;
+    display: block;
 }
 
 #editor:focus {
@@ -928,6 +1030,117 @@ body {
     }
 }
 
+/* --- Find & Replace Panel --- */
+#find-replace-panel {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    z-index: 10;
+    transition: all 0.2s ease;
+    transform: translateY(0);
+    opacity: 1;
+    height: auto;
+}
+
+#find-replace-panel.hidden {
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    border-bottom-width: 0;
+    transform: translateY(-20px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.find-replace-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.find-replace-inputs {
+    flex-grow: 1;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.25rem 0.75rem;
+}
+
+.input-group input {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    flex: 1;
+}
+
+.input-group input:focus {
+    outline: none;
+}
+
+#find-counter {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+}
+
+.find-replace-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.pill-btn:hover {
+    background-color: var(--border-color);
+}
+
+.pill-btn i {
+    font-size: 0.8rem;
+}
+
+#close-find-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1.125rem;
+    transition: var(--transition);
+}
+
+#close-find-btn:hover {
+    color: var(--text-primary);
+}
+
 /* --- 10. Floating Toolbar --- */
 .floating-toolbar {
     position: fixed;
@@ -959,7 +1172,15 @@ body {
 
 .toolbar-actions {
     display: flex;
+    align-items: center;
     gap: 0.25rem;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background-color: var(--border-color);
+    margin: 0 0.25rem;
 }
 
 .toolbar-btn, .toolbar-close-btn {

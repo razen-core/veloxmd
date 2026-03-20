@@ -17,30 +17,109 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Function to wrap selected text with a pair of characters
-    const insertPair = (pair) => {
+    const insertPair = (pair, placeholder = '') => {
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
-        const selectedText = editor.value.substring(start, end);
+        const selectedText = editor.value.substring(start, end) || placeholder;
 
         let left, right;
-        if (pair === '()') {
-            left = '('; right = ')';
-        } else if (pair === '{}') {
-            left = '{'; right = '}';
-        } else if (pair === '[]') {
-            left = '['; right = ']';
-        } else if (pair === '$$') {
-            left = '$$';
-            right = '$$';
+        const pairs = {
+            '()': ['(', ')'],
+            '{}': ['{', '}'],
+            '[]': ['[', ']'],
+            '$$': ['$$', '$$'],
+            '**': ['**', '**'],
+            '*': ['*', '*'],
+            '`': ['`', '`']
+        };
+
+        if (pairs[pair]) {
+            [left, right] = pairs[pair];
         } else {
             [left, right] = pair.split('');
+            if (right === undefined) right = left;
         }
 
         const newText = left + selectedText + right;
         editor.value = editor.value.substring(0, start) + newText + editor.value.substring(end);
-        editor.selectionStart = start + left.length;
-        editor.selectionEnd = end + left.length;
+
+        if (!editor.value.substring(start, end)) {
+            // If no selection, place cursor inside/select placeholder
+            editor.selectionStart = start + left.length;
+            editor.selectionEnd = start + left.length + selectedText.length;
+        } else {
+            editor.selectionStart = start + left.length;
+            editor.selectionEnd = end + left.length;
+        }
         editor.focus();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const formatHeading = () => {
+        const start = editor.selectionStart;
+        const text = editor.value;
+        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+        editor.value = text.substring(0, lineStart) + '## ' + text.substring(lineStart);
+        editor.selectionStart = editor.selectionEnd = start + 3;
+        editor.focus();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const formatLink = () => {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end) || 'text';
+        const linkText = `[${selectedText}](url)`;
+        editor.value = editor.value.substring(0, start) + linkText + editor.value.substring(end);
+
+        if (selectedText === 'text') {
+            editor.selectionStart = start + 1;
+            editor.selectionEnd = start + 1 + selectedText.length;
+        } else {
+            editor.selectionStart = start + selectedText.length + 3;
+            editor.selectionEnd = start + selectedText.length + 6;
+        }
+        editor.focus();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const formatCodeBlock = async () => {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end) || 'code here';
+
+        // Using a simple prompt for language since we don't have a custom modal for this yet in toolbar.js context
+        // But the user mentioned "language prompt", and editor.js has showModal.
+        // For simplicity and keeping toolbar.js relatively independent, I'll use a placeholder and then select it.
+        const lang = 'language';
+        const codeBlock = `\n\`\`\`${lang}\n${selectedText}\n\`\`\`\n`;
+        editor.value = editor.value.substring(0, start) + codeBlock + editor.value.substring(end);
+
+        editor.selectionStart = start + 4;
+        editor.selectionEnd = start + 4 + lang.length;
+        editor.focus();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const formatBlockquote = () => {
+        const start = editor.selectionStart;
+        const text = editor.value;
+        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+        editor.value = text.substring(0, lineStart) + '> ' + text.substring(lineStart);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        editor.focus();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const formatHR = () => {
+        const start = editor.selectionStart;
+        const text = editor.value;
+        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+        const hr = '---\n';
+        editor.value = text.substring(0, lineStart) + hr + text.substring(lineStart);
+        editor.selectionStart = editor.selectionEnd = lineStart + hr.length;
+        editor.focus();
+        editor.dispatchEvent(new Event('input'));
     };
 
     // Function to move the cursor horizontally
@@ -112,6 +191,30 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'insert-pair':
                 insertPair(pair);
                 break;
+            case 'format-bold':
+                insertPair('**', 'bold text');
+                break;
+            case 'format-italic':
+                insertPair('*', 'italic text');
+                break;
+            case 'format-heading':
+                formatHeading();
+                break;
+            case 'format-link':
+                formatLink();
+                break;
+            case 'format-inline-code':
+                insertPair('`', 'code');
+                break;
+            case 'format-code-block':
+                formatCodeBlock();
+                break;
+            case 'format-blockquote':
+                formatBlockquote();
+                break;
+            case 'format-hr':
+                formatHR();
+                break;
             case 'move-left':
                 moveCaretHorizontal('left');
                 break;
@@ -141,6 +244,16 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
         }
     });
+
+    // Expose formatting functions for global shortcuts
+    window.VeloxToolbar = {
+        insertPair,
+        formatHeading,
+        formatLink,
+        formatCodeBlock,
+        formatBlockquote,
+        formatHR
+    };
 
     // Event listener for the close button
     const closeBtn = toolbar.querySelector('.toolbar-close-btn');

@@ -57,15 +57,54 @@
             </div>
         </header>
 
+        <div id="find-replace-panel" class="hidden">
+            <div class="find-replace-container">
+                <div class="find-replace-inputs">
+                    <div class="input-group">
+                        <input type="text" id="find-input" placeholder="Find...">
+                        <input type="text" id="replace-input" placeholder="Replace with...">
+                        <span id="find-counter">0 of 0</span>
+                    </div>
+                </div>
+                <div class="find-replace-actions">
+                    <button id="find-prev-btn" class="pill-btn" title="Previous Match">
+                        <i class="fa-solid fa-chevron-up"></i> Prev
+                    </button>
+                    <button id="find-next-btn" class="pill-btn" title="Next Match">
+                        <i class="fa-solid fa-chevron-down"></i> Next
+                    </button>
+                    <button id="replace-btn" class="pill-btn" title="Replace">
+                        <i class="fa-solid fa-rotate"></i> Replace
+                    </button>
+                    <button id="replace-all-btn" class="pill-btn" title="Replace All">
+                        <i class="fa-solid fa-rotate-left"></i> Replace All
+                    </button>
+                </div>
+                <button id="close-find-btn" title="Close Search">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
         <div id="app-body">
             <aside id="sidebar" class="hidden">
                 <div id="sidebar-header">
-                    <h2>Outline</h2>
+                    <div class="sidebar-tabs">
+                        <button id="tab-outline" class="tab-btn active">Outline</button>
+                        <button id="tab-files" class="tab-btn">Files</button>
+                    </div>
+                    <button id="new-file-btn-sidebar" class="hidden" title="New File">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                 </div>
-                <div id="table-of-contents"></div>
+                <div id="table-of-contents" class="sidebar-content"></div>
+                <div id="file-list" class="sidebar-content hidden"></div>
             </aside>
             <main id="app-main">
-                <textarea id="editor" spellcheck="false"></textarea>
+                <div id="editor-container">
+                    <div id="editor-backdrop"></div>
+                    <textarea id="editor" spellcheck="false"></textarea>
+                </div>
                 <div id="preview" class="hidden"></div>
             </main>
         </div>
@@ -98,10 +137,40 @@
             <i class="fa-solid fa-grip-lines"></i>
         </div>
         <div class="toolbar-actions">
-            <!-- Action buttons -->
+            <!-- Existing utility buttons -->
             <button class="toolbar-btn" data-action="insert-tab" title="Insert Tab">
                 <i class="fa-solid fa-indent"></i>
             </button>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Formatting buttons -->
+            <button class="toolbar-btn" data-action="format-bold" title="Bold (Ctrl+B)">
+                <i class="fa-solid fa-bold"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-italic" title="Italic (Ctrl+I)">
+                <i class="fa-solid fa-italic"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-heading" title="Heading (Ctrl+H)">
+                <i class="fa-solid fa-heading"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-link" title="Link (Ctrl+K)">
+                <i class="fa-solid fa-link"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-inline-code" title="Inline Code (Ctrl+`)">
+                <i class="fa-solid fa-code"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-code-block" title="Code Block">
+                <i class="fa-solid fa-file-code"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-blockquote" title="Blockquote">
+                <i class="fa-solid fa-quote-left"></i>
+            </button>
+            <button class="toolbar-btn" data-action="format-hr" title="Horizontal Rule">
+                <i class="fa-solid fa-minus"></i>
+            </button>
+
+            <div class="toolbar-divider"></div>
 
             <!-- Parentheses () -->
             <button class="toolbar-btn" data-action="insert-pair" data-pair="()" title="Insert Parentheses ()">
@@ -122,6 +191,8 @@
             <button class="toolbar-btn" data-action="insert-pair" data-pair="$$" title="Insert LaTeX $$">
                 <span style="font-size: 16px; font-weight: bold; font-family: var(--font-mono); font-style: italic;">$$</span>
             </button>
+
+            <div class="toolbar-divider"></div>
 
             <button class="toolbar-btn" data-action="move-left" title="Move Left">
                 <i class="fa-solid fa-arrow-left"></i>
