@@ -4,6 +4,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const preview = document.getElementById('preview');
     const viewToggle = document.getElementById('view-toggle');
     const themeToggle = document.getElementById('theme-toggle');
+    const exportBtn = document.getElementById('export-btn');
+    const exportDropdownToggle = document.getElementById('export-dropdown-toggle');
+    const exportMenu = document.getElementById('export-menu');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const exportHtmlBtn = document.getElementById('export-html-btn');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const appTitle = document.getElementById('app-title');
     const wordCountEl = document.getElementById('word-count');
@@ -57,6 +62,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Functions
 
+    // Toast Notification System
+    window.toast = (message, type = 'info') => {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        let icon = 'info-circle';
+        if (type === 'success') icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        if (type === 'warning') icon = 'exclamation-triangle';
+
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        const dismiss = () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        };
+
+        toast.onclick = dismiss;
+        setTimeout(dismiss, 3000);
+    };
+
     // [Enhanced] Uses requestAnimationFrame for UI smoothness
     const debounce = (func, delay) => {
         let timeoutId;
@@ -91,10 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
         copyButton.onclick = async () => {
             try {
                 await navigator.clipboard.writeText(codeElement.innerText);
+                toast('Copied to clipboard', 'success');
                 copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 setTimeout(() => { copyButton.innerHTML = '<i class="far fa-copy"></i> Copy'; }, 2000);
             } catch (err) {
                 console.error('Copy failed', err);
+                toast('Copy failed', 'error');
             }
         };
 
@@ -152,7 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const performSave = async () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
-            await RazenFS.saveFile(activeFile);
+            try {
+                await RazenFS.saveFile(activeFile);
+                toast('Save completed', 'success');
+            } catch (err) {
+                console.error('Save failed', err);
+                toast('Save failed', 'error');
+            }
         }
     };
 
@@ -261,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.activeFileId = newId;
 
         await RazenFS.saveFile(newFile);
+        toast('File created', 'success');
         updateEditorAndPreview();
         return newId; // Return the ID for redirects
     };
@@ -295,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newName && newName.trim() !== '' && newName !== file.name) {
             file.name = newName.trim();
             await RazenFS.saveFile(file);
+            toast('File renamed', 'success');
         }
     };
     
@@ -311,6 +355,128 @@ document.addEventListener('DOMContentLoaded', () => {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        toast('File downloaded', 'success');
+    };
+
+    const exportAsPDF = async () => {
+        const activeFile = state.files.find(f => f.id === state.activeFileId);
+        if (!activeFile) return;
+
+        toast('Preparing PDF...', 'info');
+
+        // Create a hidden iframe for printing
+        let iframe = document.getElementById('print-iframe');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'print-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+        }
+
+        const previewHTML = preview.innerHTML;
+        const doc = iframe.contentWindow.document;
+
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+                <style>
+                    body {
+                        font-family: Georgia, serif;
+                        line-height: 1.6;
+                        color: #000;
+                        background: #fff;
+                        padding: 2rem;
+                        max-width: none;
+                    }
+                    h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; color: #000; }
+                    pre { background: #f4f4f4; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+                    code { font-family: 'PT Mono', monospace; background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 4px; }
+                    table { width: 100%; border-collapse: collapse; margin: 1.5em 0; }
+                    th, td { border: 1px solid #ddd; padding: 0.75em; text-align: left; }
+                    th { background-color: #f8f8f8; }
+                    blockquote { border-left: 4px solid #ddd; padding-left: 1rem; color: #666; font-style: italic; }
+                    img { max-width: 100%; }
+                    .code-block-header { display: none; }
+                    @page { margin: 2cm; }
+                </style>
+                <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+            </head>
+            <body>
+                <div id="print-iframe-content">
+                    ${previewHTML}
+                </div>
+                <script>
+                    window.onload = () => {
+                        window.print();
+                    };
+                </script>
+            </body>
+            </html>
+        `);
+        doc.close();
+    };
+
+    const exportAsHTML = () => {
+        const activeFile = state.files.find(f => f.id === state.activeFileId);
+        if (!activeFile) return;
+
+        const previewHTML = preview.innerHTML;
+        const fullHTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${activeFile.name}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Lexend:wght@400;500;600;700&family=PT+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
+    <style>
+        :root {
+            --font-sans: 'Lexend', sans-serif;
+            --font-header: 'Outfit', sans-serif;
+            --font-mono: 'PT Mono', monospace;
+        }
+        body {
+            font-family: var(--font-sans);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #1a1a1a;
+            background-color: #fff;
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-header); margin-top: 1.5em; margin-bottom: 0.5em; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 8px; overflow-x: auto; border: 1px solid #ddd; }
+        code { font-family: var(--font-mono); background: #f6f8fa; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+        blockquote { border-left: 4px solid #ddd; padding-left: 1rem; color: #666; font-style: italic; margin: 1.5em 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5em 0; }
+        th, td { border: 1px solid #ddd; padding: 0.75em; text-align: left; }
+        th { background-color: #f8f8f8; }
+        img { max-width: 100%; }
+        .code-block-header { display: flex; justify-content: space-between; align-items: center; background-color: #f0f0f0; padding: 0.5em 1em; border-bottom: 1px solid #ddd; font-size: 0.8em; font-family: var(--font-mono); }
+        .copy-btn { display: none; }
+    </style>
+</head>
+<body>
+    ${previewHTML}
+</body>
+</html>`;
+
+        const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activeFile.name.replace(/ /g, '_')}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast('HTML exported', 'success');
     };
 
     const handleDeleteFile = async (id) => {
@@ -329,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await RazenFS.deleteFile(id);
         state.files.splice(fileIndex, 1);
+        toast('File deleted', 'info');
 
         if (state.activeFileId === id) {
             if (state.files.length > 0) {
@@ -391,6 +558,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sidebarToggle.addEventListener('click', () => {
         toggleSidebar(!state.isSidebarVisible);
+    });
+
+    exportBtn.addEventListener('click', exportAsPDF);
+
+    exportDropdownToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportMenu.classList.toggle('hidden');
+    });
+
+    exportPdfBtn.addEventListener('click', () => {
+        exportAsPDF();
+        exportMenu.classList.add('hidden');
+    });
+
+    exportHtmlBtn.addEventListener('click', () => {
+        exportAsHTML();
+        exportMenu.classList.add('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.export-dropdown')) {
+            exportMenu.classList.add('hidden');
+        }
     });
 
     // 7. Modal Logic (Preserved)

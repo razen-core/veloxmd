@@ -45,6 +45,18 @@
                 <h1 id="app-title">Velox Editor</h1>
             </div>
             <div class="controls">
+                <div class="export-dropdown">
+                    <button id="export-btn" title="Export">
+                        <i class="fa-solid fa-download"></i>
+                    </button>
+                    <button id="export-dropdown-toggle" title="Export Options">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div id="export-menu" class="hidden">
+                        <button id="export-pdf-btn"><i class="fa-solid fa-file-pdf"></i> Export as PDF</button>
+                        <button id="export-html-btn"><i class="fa-solid fa-file-code"></i> Export as HTML</button>
+                    </div>
+                </div>
                 <button id="view-toggle" title="Toggle Preview">
                     <i class="fa-solid fa-eye"></i>
                 </button>
@@ -149,15 +161,22 @@
         <div id="ai-modal">
             <div id="ai-modal-header">
                 <h2>AI Assistant</h2>
+                <div style="flex-grow: 1;"></div>
+                <button id="ai-new-chat-btn" title="New Chat"><i class="fa-solid fa-trash-can"></i></button>
                 <button id="ai-modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="ai-modal-body">
                 <div id="ai-chat-container"></div>
                 <div id="ai-input-container">
                     <textarea id="ai-input" placeholder="Ask AI to write or edit..."></textarea>
-                    <button id="ai-send-btn">
-                        <i class="fa-solid fa-arrow-up"></i>
-                    </button>
+                    <div id="ai-button-wrapper">
+                        <button id="ai-send-btn">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button id="ai-stop-btn" class="hidden">
+                            <i class="fa-solid fa-stop"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -190,5 +209,8 @@
     <button id="show-toolbar-btn" class="show-toolbar-btn hidden" title="Show Toolbar">
         <i class="fa-solid fa-screwdriver-wrench"></i>
     </button>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
 </body>
 </html>

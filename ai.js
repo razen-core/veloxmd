@@ -1,14 +1,20 @@
+let conversationHistory = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     const aiModeBtn = document.getElementById('ai-mode-btn');
     const aiModalOverlay = document.getElementById('ai-modal-overlay');
     const aiModalCloseBtn = document.getElementById('ai-modal-close-btn');
     const aiSendBtn = document.getElementById('ai-send-btn');
+    const aiStopBtn = document.getElementById('ai-stop-btn');
     const aiInput = document.getElementById('ai-input');
+    const aiInputContainer = document.getElementById('ai-input-container');
     const aiChatContainer = document.getElementById('ai-chat-container');
     const editor = document.getElementById('editor');
     const aiActionsTemplate = document.getElementById('ai-actions-template');
+    const aiNewChatBtn = document.getElementById('ai-new-chat-btn');
 
     let apiKey = localStorage.getItem('gemini-api-key');
+    let abortController = null;
 
     aiModeBtn.addEventListener('click', () => {
         aiModalOverlay.classList.remove('hidden');
@@ -18,40 +24,63 @@ document.addEventListener('DOMContentLoaded', () => {
         aiModalOverlay.classList.add('hidden');
     });
 
-    aiSendBtn.addEventListener('click', async () => {
+    const sendMessage = async () => {
         const prompt = aiInput.value.trim();
-        if (prompt) {
+        if (prompt && !aiInput.disabled) {
             appendMessage('user', prompt);
             aiInput.value = '';
-            await getAiResponse(prompt);
+
+            let fullPrompt = prompt;
+            if (prompt.includes('@code')) {
+                fullPrompt = prompt.replace('@code', `\n\n\`\`\`\n${editor.value}\n\`\`\`\n\n`);
+            }
+            conversationHistory.push({ role: 'user', parts: [{ text: fullPrompt }] });
+
+            await getAiResponse();
+        }
+    };
+
+    aiSendBtn.addEventListener('click', sendMessage);
+
+    aiInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
     });
 
-    async function getAiResponse(prompt) {
+    aiStopBtn.addEventListener('click', () => {
+        if (abortController) {
+            abortController.abort();
+            if (window.toast) window.toast('AI response stopped', 'info');
+        }
+    });
+
+    async function getAiResponse() {
         if (!apiKey) {
             appendMessage('ai', 'API key is not set. Please set it in the settings.');
             return;
         }
 
-        let fullPrompt = prompt;
-        if (prompt.includes('@code')) {
-            fullPrompt = prompt.replace('@code', `\n\n\`\`\`\n${editor.value}\n\`\`\`\n\n`);
-        }
+        abortController = new AbortController();
+
+        // UI Updates for streaming
+        aiInput.disabled = true;
+        aiInputContainer.classList.add('streaming');
+        aiSendBtn.classList.add('hidden');
+        aiStopBtn.classList.remove('hidden');
 
         const aiMessage = appendMessage('ai', '', true);
 
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent?alt=sse&key=${apiKey}`, {
                 method: 'POST',
+                signal: abortController.signal,
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: fullPrompt
-                        }]
-                    }]
+                    contents: conversationHistory
                 })
             });
 
@@ -91,10 +120,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             finalizeMessage(aiMessage, accumulatedText);
+            conversationHistory.push({ role: 'model', parts: [{ text: accumulatedText }] });
 
         } catch (error) {
-            console.error('Error fetching AI response:', error);
-            aiMessage.innerHTML = marked.parse('Sorry, I encountered an error. Please try again.');
+            if (error.name === 'AbortError') {
+                aiMessage.innerHTML += '<p><em>Response cancelled by user.</em></p>';
+            } else {
+                console.error('Error fetching AI response:', error);
+                aiMessage.innerHTML = marked.parse('Sorry, I encountered an error. Please try again.');
+            }
+        } finally {
+            abortController = null;
+            aiInput.disabled = false;
+            aiInputContainer.classList.remove('streaming');
+            aiSendBtn.classList.remove('hidden');
+            aiStopBtn.classList.add('hidden');
+            aiInput.focus();
         }
     }
 
@@ -131,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 editor.value = codeToInsert;
                 editor.dispatchEvent(new Event('input', { bubbles: true }));
                 aiModalOverlay.classList.add('hidden');
+                if (window.toast) window.toast('Code replaced', 'success');
             };
 
             replaceSaveBtn.onclick = () => {
@@ -138,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 editor.dispatchEvent(new Event('input', { bubbles: true }));
                 editor.dispatchEvent(new CustomEvent('save-content'));
                 aiModalOverlay.classList.add('hidden');
+                if (window.toast) window.toast('Code replaced & saved', 'success');
             };
 
             messageElement.appendChild(actionsContainer);
@@ -166,5 +209,18 @@ document.addEventListener('DOMContentLoaded', () => {
         apiKey = apiKeyInput.value.trim();
         localStorage.setItem('gemini-api-key', apiKey);
         settingsModalOverlay.classList.add('hidden');
+        if (window.toast) window.toast('API key saved', 'success');
+    });
+
+    aiNewChatBtn.addEventListener('click', () => {
+        conversationHistory = [];
+        aiChatContainer.style.transition = 'opacity 0.3s ease';
+        aiChatContainer.style.opacity = '0';
+
+        setTimeout(() => {
+            aiChatContainer.innerHTML = '';
+            aiChatContainer.style.opacity = '1';
+            if (window.toast) window.toast('Chat cleared', 'info');
+        }, 300);
     });
 });
