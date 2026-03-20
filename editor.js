@@ -10,7 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const charCountEl = document.getElementById('char-count');
     const sidebar = document.getElementById('sidebar');
     const tableOfContents = document.getElementById('table-of-contents');
-    
+    const fileList = document.getElementById('file-list');
+    const tabOutline = document.getElementById('tab-outline');
+    const tabFiles = document.getElementById('tab-files');
+    const newFileBtnSidebar = document.getElementById('new-file-btn-sidebar');
+
+    // Find & Replace Elements
+    const findReplacePanel = document.getElementById('find-replace-panel');
+    const findInput = document.getElementById('find-input');
+    const replaceInput = document.getElementById('replace-input');
+    const findCounter = document.getElementById('find-counter');
+    const findPrevBtn = document.getElementById('find-prev-btn');
+    const findNextBtn = document.getElementById('find-next-btn');
+    const replaceBtn = document.getElementById('replace-btn');
+    const replaceAllBtn = document.getElementById('replace-all-btn');
+    const closeFindBtn = document.getElementById('close-find-btn');
+    const editorBackdrop = document.getElementById('editor-backdrop');
+
     // Modal Elements
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
@@ -25,6 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
         activeFileId: null,
         isPreview: false,
         isSidebarVisible: false,
+        activeTab: 'outline', // 'outline' or 'files'
+        findMatches: [],
+        currentMatchIndex: -1,
     };
 
     // 3. Modern Tech Setup (Performance Observers)
@@ -235,6 +254,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = sidebarToggle.querySelector('i');
         icon.className = show ? 'fas fa-times' : 'fas fa-bars';
         sidebarToggle.title = show ? 'Close Sidebar' : 'Open Sidebar';
+        if (show) updateSidebar();
+    };
+
+    const updateSidebar = () => {
+        tabOutline.classList.toggle('active', state.activeTab === 'outline');
+        tabFiles.classList.toggle('active', state.activeTab === 'files');
+        tableOfContents.classList.toggle('hidden', state.activeTab !== 'outline');
+        fileList.classList.toggle('hidden', state.activeTab !== 'files');
+        newFileBtnSidebar.classList.toggle('hidden', state.activeTab !== 'files');
+
+        if (state.activeTab === 'outline') {
+            updateTableOfContents();
+        } else {
+            renderFileList();
+        }
+    };
+
+    const renderFileList = () => {
+        fileList.innerHTML = '';
+        state.files.forEach(file => {
+            const item = document.createElement('div');
+            item.className = `file-item ${file.id === state.activeFileId ? 'active' : ''}`;
+
+            const name = document.createElement('span');
+            name.className = 'file-item-name';
+            name.textContent = file.name;
+
+            // Extract a date from ID or use a placeholder
+            const dateStr = file.id.startsWith('file_') ? new Date(parseInt(file.id.split('_')[1])).toLocaleDateString() : 'Unknown';
+            const dateChip = document.createElement('span');
+            dateChip.className = 'file-date-chip';
+            dateChip.textContent = dateStr;
+
+            const actions = document.createElement('div');
+            actions.className = 'file-item-actions';
+
+            const renameBtn = document.createElement('button');
+            renameBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            renameBtn.title = 'Rename';
+            renameBtn.onclick = (e) => { e.stopPropagation(); handleRenameFile(file.id); };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.title = 'Delete';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); handleDeleteFile(file.id); };
+
+            actions.append(renameBtn, deleteBtn);
+            item.append(dateChip, name, actions);
+
+            item.onclick = () => switchActiveFile(file.id);
+            fileList.appendChild(item);
+        });
     };
 
     // [Enhanced] Sync Scroll Feature
@@ -246,6 +317,136 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isNaN(scrollPercentage)) {
              preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
         }
+        // Apply to backdrop
+        editorBackdrop.scrollTop = editor.scrollTop;
+    };
+
+    // --- Find & Replace Logic ---
+    const toggleFindReplace = (show) => {
+        if (show === undefined) show = findReplacePanel.classList.contains('hidden');
+        findReplacePanel.classList.toggle('hidden', !show);
+        if (show) {
+            findInput.focus();
+            findInput.select();
+            performSearch();
+        } else {
+            state.findMatches = [];
+            state.currentMatchIndex = -1;
+            updateSearchUI();
+            editor.focus();
+        }
+    };
+
+    const performSearch = () => {
+        const query = findInput.value;
+        const text = editor.value;
+        state.findMatches = [];
+        state.currentMatchIndex = -1;
+
+        if (query) {
+            let match;
+            const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            while ((match = regex.exec(text)) !== null) {
+                state.findMatches.push({
+                    index: match.index,
+                    length: query.length
+                });
+            }
+            if (state.findMatches.length > 0) {
+                state.currentMatchIndex = 0;
+            }
+        }
+        updateSearchUI();
+    };
+
+    const updateSearchUI = () => {
+        const count = state.findMatches.length;
+        const current = state.currentMatchIndex + 1;
+        findCounter.textContent = `${count > 0 ? current : 0} of ${count}`;
+        highlightMatches();
+    };
+
+    const highlightMatches = () => {
+        const text = editor.value;
+        if (state.findMatches.length === 0) {
+            editorBackdrop.innerHTML = text.replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+            return;
+        }
+
+        let highlightedText = '';
+        let lastIndex = 0;
+
+        state.findMatches.forEach((match, i) => {
+            highlightedText += text.substring(lastIndex, match.index).replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+            const isCurrent = i === state.currentMatchIndex;
+            highlightedText += `<mark class="search-match ${isCurrent ? 'current' : ''}">${text.substring(match.index, match.index + match.length).replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]))}</mark>`;
+            lastIndex = match.index + match.length;
+        });
+
+        highlightedText += text.substring(lastIndex).replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+        // Add a zero-width space at the end to ensure the backdrop height matches if the text ends with a newline
+        editorBackdrop.innerHTML = highlightedText + (text.endsWith('\n') ? ' ' : '');
+
+        // Scroll current match into view if needed
+        if (state.currentMatchIndex !== -1) {
+            const currentMark = editorBackdrop.querySelector('.search-match.current');
+            if (currentMark) {
+                // We don't want to scroll the backdrop independently, we want to sync editor scroll
+                // But for find/replace, we might want to jump to the match in the editor
+                const match = state.findMatches[state.currentMatchIndex];
+                editor.selectionStart = match.index;
+                editor.selectionEnd = match.index + match.length;
+
+                // Ensure the selection is visible in the textarea
+                const lineHeight = parseFloat(getComputedStyle(editor).lineHeight);
+                const scrollTop = editor.scrollTop;
+                const offsetTop = currentMark.offsetTop;
+                if (offsetTop < scrollTop || offsetTop > scrollTop + editor.clientHeight - lineHeight) {
+                    editor.scrollTop = offsetTop - editor.clientHeight / 2;
+                }
+            }
+        }
+    };
+
+    const goToNextMatch = () => {
+        if (state.findMatches.length === 0) return;
+        state.currentMatchIndex = (state.currentMatchIndex + 1) % state.findMatches.length;
+        updateSearchUI();
+    };
+
+    const goToPrevMatch = () => {
+        if (state.findMatches.length === 0) return;
+        state.currentMatchIndex = (state.currentMatchIndex - 1 + state.findMatches.length) % state.findMatches.length;
+        updateSearchUI();
+    };
+
+    const replaceCurrent = () => {
+        if (state.currentMatchIndex === -1) return;
+        const match = state.findMatches[state.currentMatchIndex];
+        const replacement = replaceInput.value;
+        const text = editor.value;
+
+        editor.value = text.substring(0, match.index) + replacement + text.substring(match.index + match.length);
+
+        // Re-search after replacement
+        performSearch();
+        // Try to stay on the same index if possible, or go to next
+        if (state.findMatches.length > 0) {
+            state.currentMatchIndex = Math.min(state.currentMatchIndex, state.findMatches.length - 1);
+        }
+        updateSearchUI();
+        editor.dispatchEvent(new Event('input'));
+    };
+
+    const replaceAll = () => {
+        const query = findInput.value;
+        if (!query) return;
+        const replacement = replaceInput.value;
+        const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        editor.value = editor.value.replace(regex, replacement);
+
+        performSearch();
+        editor.dispatchEvent(new Event('input'));
     };
 
     // 5. File Operations (Preserved Exact Logic)
@@ -360,12 +561,50 @@ document.addEventListener('DOMContentLoaded', () => {
             debouncedUpdatePreview();
             debouncedUpdateTOC();
             debouncedSaveState();
+
+            if (!findReplacePanel.classList.contains('hidden')) {
+                performSearch();
+            } else {
+                highlightMatches(); // Update backdrop
+            }
         }
     });
 
     // [New] Sync Scroll Listener
     editor.addEventListener('scroll', () => {
         window.requestAnimationFrame(syncScroll);
+    });
+
+    // Sidebar Tab Listeners
+    tabOutline.addEventListener('click', () => {
+        state.activeTab = 'outline';
+        updateSidebar();
+    });
+
+    tabFiles.addEventListener('click', () => {
+        state.activeTab = 'files';
+        updateSidebar();
+    });
+
+    newFileBtnSidebar.addEventListener('click', async () => {
+        const newId = await createNewFile();
+        // Since we are in the same page, we can just switch
+        switchActiveFile(newId);
+    });
+
+    // Find & Replace Listeners
+    findInput.addEventListener('input', performSearch);
+    findNextBtn.addEventListener('click', goToNextMatch);
+    findPrevBtn.addEventListener('click', goToPrevMatch);
+    replaceBtn.addEventListener('click', replaceCurrent);
+    replaceAllBtn.addEventListener('click', replaceAll);
+    closeFindBtn.addEventListener('click', () => toggleFindReplace(false));
+
+    findInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            goToNextMatch();
+        }
     });
 
     editor.addEventListener('save-content', () => {
@@ -463,9 +702,67 @@ document.addEventListener('DOMContentLoaded', () => {
         if (state.files.length > 0) {
             updateEditorAndPreview();
             updateTableOfContents();
+            updateSidebar();
             toggleSidebar(state.isSidebarVisible);
         }
     };
+
+    // Handle global keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+        const isMod = e.ctrlKey || e.metaKey;
+
+        if (isMod) {
+            switch (e.key.toLowerCase()) {
+                case 'f':
+                    e.preventDefault();
+                    toggleFindReplace();
+                    break;
+                case 'b':
+                    e.preventDefault();
+                    window.VeloxToolbar?.insertPair('**', 'bold text');
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    window.VeloxToolbar?.insertPair('*', 'italic text');
+                    break;
+                case 'h':
+                    e.preventDefault();
+                    window.VeloxToolbar?.formatHeading();
+                    break;
+                case 'k':
+                    e.preventDefault();
+                    window.VeloxToolbar?.formatLink();
+                    break;
+                case '`':
+                    e.preventDefault();
+                    window.VeloxToolbar?.insertPair('`', 'code');
+                    break;
+                case 's':
+                    e.preventDefault();
+                    saveState();
+                    break;
+                case 'n':
+                    e.preventDefault();
+                    createNewFile().then(id => switchActiveFile(id));
+                    break;
+                case 'p':
+                    e.preventDefault();
+                    state.activeTab = 'files';
+                    toggleSidebar(true);
+                    updateSidebar();
+                    break;
+                case 'd':
+                    e.preventDefault();
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+                    break;
+            }
+        } else if (e.key === 'Escape') {
+            if (!findReplacePanel.classList.contains('hidden')) {
+                toggleFindReplace(false);
+            }
+        }
+    });
 
     init();
 });
