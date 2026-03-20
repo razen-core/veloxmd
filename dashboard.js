@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalInput = document.getElementById('modal-input');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-    const themeToggle = document.getElementById('theme-toggle');
+    const themeToggle = document.getElementById('dashboard-theme-toggle');
 
     let files = [];
     let modalResolve = null;

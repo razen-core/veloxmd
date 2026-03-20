@@ -155,10 +155,24 @@ body {
     color: var(--text-primary);
 }
 
+#app-header {
+    background-color: var(--bg-primary);
+    position: relative;
+    z-index: 1000;
+}
+
 #app-header .header-left {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    min-width: 0;
+}
+
+#app-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .back-to-dashboard {
@@ -1011,22 +1025,33 @@ body {
 }
 
 @media (max-width: 600px) {
+    .dashboard-container {
+        padding: 1.5rem 1rem;
+    }
     .dashboard-header {
         flex-direction: row;
         align-items: center;
         gap: 1rem;
+        margin-bottom: 1.5rem;
     }
     .dashboard-title {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
+        flex-shrink: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .cta-button-text {
         display: none;
     }
     .cta-button {
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
         padding: 0;
         justify-content: center;
+        flex-shrink: 0;
+        border-radius: 50%;
     }
 }
 
@@ -1174,6 +1199,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    flex-shrink: 0;
 }
 
 .toolbar-divider {
@@ -1596,11 +1622,38 @@ body {
     border-radius: 4px;
 }
 
-/* --- 12. Export Dropdown --- */
-.export-dropdown {
+/* --- 12. Export Dropdown & Overflow Menus --- */
+.export-dropdown, .header-more-dropdown {
     position: relative;
     display: flex;
     align-items: center;
+}
+
+.mobile-only {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+    .mobile-only {
+        display: flex !important;
+    }
+
+    #app-header {
+        padding: 0.5rem 1rem;
+    }
+
+    #app-title {
+        font-size: 1rem;
+    }
+
+    .back-to-dashboard, #sidebar-toggle, #app-header .controls button, #header-more-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
 }
 
 #export-btn {
@@ -1621,54 +1674,55 @@ body {
     width: 30px !important;
 }
 
-#export-menu {
+#export-menu, #header-more-menu {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-primary);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-medium);
+    border-radius: 16px;
+    box-shadow: var(--float-shadow);
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    z-index: 1000;
-    min-width: 180px;
+    gap: 2px;
+    z-index: 2000;
+    min-width: 220px;
     transition: opacity 0.2s, transform 0.2s;
 }
 
-#export-menu.hidden {
+#export-menu.hidden, #header-more-menu.hidden {
     opacity: 0;
     transform: translateY(-10px);
     pointer-events: none;
 }
 
-#export-menu button {
+#export-menu button, #header-more-menu button {
     background: none;
     border: none;
     color: var(--text-primary);
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
     cursor: pointer;
     text-align: left;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
     transition: background-color 0.2s;
     white-space: nowrap;
 }
 
-#export-menu button:hover {
-    background-color: var(--border-color);
+#export-menu button:hover, #header-more-menu button:hover {
+    background-color: var(--bg-secondary);
 }
 
-#export-menu button i {
+#export-menu button i, #header-more-menu button i {
     color: var(--text-secondary);
-    width: 16px;
+    width: 20px;
     text-align: center;
+    font-size: 1rem;
 }
 
 /* Print Styles */

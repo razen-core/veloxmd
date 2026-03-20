@@ -191,15 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Settings Modal Logic
     const settingsBtn = document.getElementById('settings-btn');
+    const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
     const settingsModalOverlay = document.getElementById('settings-modal-overlay');
     const settingsModalCloseBtn = document.getElementById('settings-modal-close-btn');
     const apiKeyInput = document.getElementById('api-key-input');
     const settingsSaveBtn = document.getElementById('settings-save-btn');
 
-    settingsBtn.addEventListener('click', () => {
+    const openSettings = () => {
         apiKeyInput.value = localStorage.getItem('gemini-api-key') || '';
         settingsModalOverlay.classList.remove('hidden');
-    });
+    };
+
+    settingsBtn.addEventListener('click', openSettings);
+    if (mobileSettingsBtn) {
+        mobileSettingsBtn.addEventListener('click', () => {
+            openSettings();
+            const headerMoreMenu = document.getElementById('header-more-menu');
+            if (headerMoreMenu) headerMoreMenu.classList.add('hidden');
+        });
+    }
 
     settingsModalCloseBtn.addEventListener('click', () => {
         settingsModalOverlay.classList.add('hidden');

@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportMenu = document.getElementById('export-menu');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
     const exportHtmlBtn = document.getElementById('export-html-btn');
+    const mobileExportPdfBtn = document.getElementById('mobile-export-pdf-btn');
+    const mobileExportHtmlBtn = document.getElementById('mobile-export-html-btn');
+    const headerMoreBtn = document.getElementById('header-more-btn');
+    const headerMoreMenu = document.getElementById('header-more-menu');
+    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+    const mobileSettingsBtn = document.getElementById('mobile-settings-btn');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const appTitle = document.getElementById('app-title');
     const wordCountEl = document.getElementById('word-count');
@@ -286,7 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const applyTheme = (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        const themeIcon = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        themeToggle.querySelector('i').className = themeIcon;
+        if (mobileThemeToggle) {
+            mobileThemeToggle.querySelector('i').className = themeIcon;
+        }
         localStorage.setItem('theme', theme);
     };
 
@@ -790,10 +800,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!state.isPreview) syncScroll();
     });
 
-    themeToggle.addEventListener('click', () => {
+    const toggleAppTheme = () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    });
+    };
+
+    themeToggle.addEventListener('click', toggleAppTheme);
+    if (mobileThemeToggle) {
+        mobileThemeToggle.addEventListener('click', () => {
+            toggleAppTheme();
+            headerMoreMenu.classList.add('hidden');
+        });
+    }
 
     sidebarToggle.addEventListener('click', () => {
         toggleSidebar(!state.isSidebarVisible);
@@ -816,9 +834,33 @@ document.addEventListener('DOMContentLoaded', () => {
         exportMenu.classList.add('hidden');
     });
 
+    if (mobileExportPdfBtn) {
+        mobileExportPdfBtn.addEventListener('click', () => {
+            exportAsPDF();
+            headerMoreMenu.classList.add('hidden');
+        });
+    }
+
+    if (mobileExportHtmlBtn) {
+        mobileExportHtmlBtn.addEventListener('click', () => {
+            exportAsHTML();
+            headerMoreMenu.classList.add('hidden');
+        });
+    }
+
+    if (headerMoreBtn) {
+        headerMoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            headerMoreMenu.classList.toggle('hidden');
+        });
+    }
+
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.export-dropdown')) {
             exportMenu.classList.add('hidden');
+        }
+        if (!e.target.closest('.header-more-dropdown')) {
+            if (headerMoreMenu) headerMoreMenu.classList.add('hidden');
         }
     });
 
