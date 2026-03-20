@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
         langPrefix: 'language-',
     });
 
+    // KaTeX Support
+    const options = {
+        throwOnError: false
+    };
+    marked.use(markedKatex(options));
+
     // [Modern Tech] Lazy Highlighter Observer
     // Prevents freezing by only highlighting code blocks currently visible on screen
     const codeObserver = new IntersectionObserver((entries, observer) => {

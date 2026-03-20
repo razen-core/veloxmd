@@ -21,7 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const start = editor.selectionStart;
         const end = editor.selectionEnd;
         const selectedText = editor.value.substring(start, end);
-        const [left, right] = pair;
+
+        let left, right;
+        if (pair === '()') {
+            left = '('; right = ')';
+        } else if (pair === '{}') {
+            left = '{'; right = '}';
+        } else if (pair === '[]') {
+            left = '['; right = ']';
+        } else if (pair === '$$') {
+            left = '$$';
+            right = '$$';
+        } else {
+            [left, right] = pair.split('');
+        }
+
         const newText = left + selectedText + right;
         editor.value = editor.value.substring(0, start) + newText + editor.value.substring(end);
         editor.selectionStart = start + left.length;
