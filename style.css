@@ -1354,12 +1354,24 @@ body {
     color: var(--text-primary);
 }
 
-#ai-modal-close-btn, #settings-modal-close-btn {
+#ai-modal-close-btn, #ai-new-chat-btn, #settings-modal-close-btn {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.125rem;
     color: var(--text-secondary);
     cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#ai-modal-close-btn:hover, #ai-new-chat-btn:hover, #settings-modal-close-btn:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 #ai-modal-body {
@@ -1381,9 +1393,20 @@ body {
     display: flex;
     gap: 0.5rem;
     border: 1px solid var(--border-color);
-    border-radius: 32px;
+    border-radius: 20px;
     padding: 0.5rem;
     align-items: center;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#ai-input-container.streaming {
+    animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+    0% { border-color: var(--border-color); box-shadow: 0 0 0 0 oklch(0.75 0.12 250 / 0.2); }
+    50% { border-color: var(--accent-color); box-shadow: 0 0 0 4px oklch(0.75 0.12 250 / 0.2); }
+    100% { border-color: var(--border-color); box-shadow: 0 0 0 0 oklch(0.75 0.12 250 / 0.2); }
 }
 
 #ai-input {
@@ -1402,26 +1425,43 @@ body {
     outline: none;
 }
 
-#ai-send-btn {
+#ai-button-wrapper {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+#ai-send-btn, #ai-stop-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-color: var(--accent-color);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
 }
 
-#ai-send-btn i {
+[data-theme='dark'] #ai-send-btn, [data-theme='dark'] #ai-stop-btn {
+    color: var(--bg-primary);
+}
+
+#ai-send-btn i, #ai-stop-btn i {
     font-size: 1rem;
 }
 
-#ai-send-btn:hover {
+#ai-send-btn:hover, #ai-stop-btn:hover {
     background-color: var(--accent-hover);
+}
+
+#ai-stop-btn {
+    background-color: var(--error-color);
 }
 
 #settings-modal-body {
@@ -1554,6 +1594,158 @@ body {
     color: var(--code-text);
     padding: 0.2em 0.4em;
     border-radius: 4px;
+}
+
+/* --- 12. Export Dropdown --- */
+.export-dropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+#export-btn {
+    border-top-left-radius: 30px;
+    border-bottom-left-radius: 30px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 1px solid var(--border-color);
+    background-color: var(--bg-secondary) !important;
+}
+
+#export-dropdown-toggle {
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: var(--bg-secondary) !important;
+    width: 30px !important;
+}
+
+#export-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-medium);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 1000;
+    min-width: 180px;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+#export-menu.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+#export-menu button {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+#export-menu button:hover {
+    background-color: var(--border-color);
+}
+
+#export-menu button i {
+    color: var(--text-secondary);
+    width: 16px;
+    text-align: center;
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #print-iframe-content, #print-iframe-content * {
+        visibility: visible;
+    }
+    #print-iframe-content {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+    }
+}
+
+/* --- 13. Toast Notifications --- */
+#toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 8px;
+    z-index: 9999;
+}
+
+.toast {
+    padding: 12px 20px;
+    border-radius: 30px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-medium);
+    border-left: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    cursor: pointer;
+    max-width: 320px;
+}
+
+.toast.toast-success { border-left-color: oklch(0.65 0.12 150); }
+.toast.toast-error { border-left-color: oklch(0.60 0.15 25); }
+.toast.toast-info { border-left-color: var(--accent-color); }
+.toast.toast-warning { border-left-color: var(--warning-color); }
+
+.toast.fade-out {
+    animation: toast-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px) scale(0.9);
+    }
 }
 .user-message code {
     background-color: rgba(255, 255, 255, 0.1);
