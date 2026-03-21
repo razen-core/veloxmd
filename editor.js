@@ -554,49 +554,52 @@ document.addEventListener('DOMContentLoaded', () => {
         return temp.innerHTML;
     };
 
-    const exportAsPDF = async () => {
+    const exportAsPDF = () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (!activeFile) return;
         
-        toast('Opening print view…', 'info');
-        
+        toast('Preparing PDF…', 'info');
         const contentHTML = getExportReadyHTML();
         
-        // window.open() not iframe — a visible document loads Google Fonts correctly.
-        // visibility:hidden iframes cause the browser to skip external font loading,
-        // making document.fonts.ready resolve with fallback fonts only.
-        const pw = window.open('', '_blank', 'width=900,height=700');
-        if (!pw) {
-            toast('Allow popups for PDF export, then try again', 'warning');
-            return;
-        }
+        // Remove any leftover frame from a previous export
+        document.getElementById('_velox_pdf_frame')?.remove();
         
-        pw.document.write(`<!DOCTYPE html>
+        const iframe = document.createElement('iframe');
+        iframe.id = '_velox_pdf_frame';
+        // Full-page overlay — visible so browser renders fonts & styles correctly.
+        // Hidden iframes skip font loading. window.open() depends on CDN network timing.
+        // This is the only approach that works reliably without external dependencies.
+        iframe.style.cssText = `
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            z-index: 99999; border: none;
+            background: #fff;
+        `;
+        document.body.appendChild(iframe);
+        
+        const doc = iframe.contentDocument;
+        doc.open();
+        doc.write(`<!DOCTYPE html>
     <html lang="en">
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>${activeFile.name}</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Lexend:wght@400;500;600&family=PT+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css">
-    
     <style>
-    /* ── Reset ────────────────────────────────────────────── */
+    /* ── No Google Fonts — system stack is instant, looks perfect in print ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     
-    /* ── Page ─────────────────────────────────────────────── */
     @page {
         size: A4 portrait;
-        margin: 24mm 22mm 24mm 22mm;
+        margin: 22mm 20mm 22mm 20mm;
     }
     
     html { font-size: 10.5pt; }
     
     body {
-        font-family: 'Lexend', 'Segoe UI', system-ui, sans-serif;
+        font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont,
+                     'Helvetica Neue', Arial, sans-serif;
         line-height: 1.78;
         color: #1c1c1e;
         background: #fff;
@@ -604,20 +607,60 @@ document.addEventListener('DOMContentLoaded', () => {
         print-color-adjust: exact;
     }
     
-    /* ── Typography ───────────────────────────────────────── */
+    /* ── Screen: show a "print is loading" message ───────── */
+    .print-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        background: #1c1c1e;
+        color: #fff;
+        padding: 0.9rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .print-bar-actions { display: flex; gap: 0.75rem; }
+    .print-bar button {
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.25);
+        color: #fff;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: background 0.15s;
+    }
+    .print-bar button:hover { background: rgba(255,255,255,0.28); }
+    .print-bar button.primary {
+        background: #fff;
+        color: #1c1c1e;
+        border-color: #fff;
+    }
+    .print-bar button.primary:hover { background: #e8e8e8; }
+    
+    .page-content {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+    }
+    
+    /* ── Typography ────────────── */
     h1, h2, h3, h4, h5, h6 {
-        font-family: 'Outfit', sans-serif;
+        font-family: Georgia, 'Times New Roman', serif;
         font-weight: 700;
         color: #0a0a0a;
-        line-height: 1.2;
+        line-height: 1.22;
         margin-top: 1.6em;
         margin-bottom: 0.45em;
         page-break-after: avoid;
         break-after: avoid;
     }
     h1 {
-        font-size: 2em;
-        margin-top: 0;
+        font-size: 2em; margin-top: 0;
         padding-bottom: 0.3em;
         border-bottom: 2px solid #e0e0e0;
     }
@@ -628,68 +671,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     h3 { font-size: 1.2em; }
     h4 { font-size: 1.05em; }
-    h5, h6 { font-size: 1em; color: #444; }
+    h5, h6 { font-size: 1em; color: #555; }
     
     p { margin-bottom: 0.9em; orphans: 3; widows: 3; }
     
     a { color: #1a56db; text-decoration: underline; word-break: break-word; }
-    
-    strong { font-weight: 600; }
+    strong { font-weight: 700; }
     em { font-style: italic; }
     
-    /* ── Lists ────────────────────────────────────────────── */
+    /* ── Lists ─────────────────── */
     ul, ol { margin: 0.3em 0 0.9em 1.8em; padding: 0; }
     li { margin-bottom: 0.3em; }
     ul ul, ol ol, ul ol, ol ul { margin-top: 0.2em; margin-bottom: 0.2em; }
     
-    /* ── Blockquote ───────────────────────────────────────── */
+    /* ── Blockquote ────────────── */
     blockquote {
-        border-left: 3px solid #c8c8c8;
+        border-left: 3px solid #ccc;
         margin: 1.1em 0;
         padding: 0.55em 1em;
         color: #555;
         font-style: italic;
         background: #f8f8f8;
         border-radius: 0 5px 5px 0;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid; break-inside: avoid;
     }
     blockquote p:last-child { margin-bottom: 0; }
     
-    /* ── HR ───────────────────────────────────────────────── */
+    /* ── HR ────────────────────── */
     hr { border: none; border-top: 1px solid #ddd; margin: 1.5em 0; }
     
-    /* ── Tables ───────────────────────────────────────────── */
+    /* ── Tables ────────────────── */
     .table-scroll-wrap {
         margin: 1.2em 0;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid; break-inside: avoid;
     }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.88em;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
     th, td {
         border: 1px solid #d0d0d0;
         padding: 0.5em 0.85em;
-        text-align: left;
-        vertical-align: top;
+        text-align: left; vertical-align: top;
     }
     th {
         background: #f2f2f2;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 600;
-        font-size: 0.82em;
+        font-weight: 700;
+        font-size: 0.8em;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: #333;
     }
     tr:nth-child(even) td { background: #fafafa; }
     
-    /* ── Inline code ──────────────────────────────────────── */
+    /* ── Inline code ───────────── */
     code {
-        font-family: 'PT Mono', 'Courier New', monospace;
+        font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
         font-size: 0.85em;
         background: #f0f0f0;
         color: #c7254e;
@@ -698,40 +732,36 @@ document.addEventListener('DOMContentLoaded', () => {
         border: 1px solid #e4e4e4;
     }
     
-    /* ── Code blocks ──────────────────────────────────────── */
+    /* ── Code blocks ───────────── */
     pre {
         background: #f6f8fa;
         border: 1px solid #e1e4e8;
         border-radius: 7px;
         padding: 0.9em 1.1em;
-        margin: 1em 0 1.1em;
+        margin: 1em 0;
         overflow-x: auto;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid; break-inside: avoid;
     }
     pre code {
-        font-family: 'PT Mono', 'Courier New', monospace;
+        font-family: 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
         font-size: 0.83em;
         line-height: 1.55;
         background: none;
         color: inherit;
-        padding: 0;
-        border: none;
-        border-radius: 0;
+        padding: 0; border: none; border-radius: 0;
     }
     
-    /* ── Images ───────────────────────────────────────────── */
+    /* ── Images ─────────────────── */
     img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0.8em 0; }
     
-    /* ── Task lists ───────────────────────────────────────── */
+    /* ── Task lists ────────────── */
     .task-list-item { list-style: none; margin-left: -1.4em; }
     .task-list-item input[type="checkbox"] {
         appearance: none; -webkit-appearance: none;
         width: 12px; height: 12px;
         border: 1.5px solid #888; border-radius: 3px;
         vertical-align: middle; margin-right: 0.45em;
-        position: relative; top: -1px;
-        display: inline-block;
+        position: relative; top: -1px; display: inline-block;
     }
     .task-list-item input[type="checkbox"]:checked {
         background: #1a56db; border-color: #1a56db;
@@ -741,58 +771,73 @@ document.addEventListener('DOMContentLoaded', () => {
         position: absolute; left: 1px; top: -1px;
     }
     
-    /* ── KaTeX ────────────────────────────────────────────── */
-    .katex-display { overflow-x: auto; margin: 1em 0; page-break-inside: avoid; break-inside: avoid; }
+    /* ── KaTeX ──────────────────── */
+    .katex-display {
+        overflow-x: auto; margin: 1em 0;
+        page-break-inside: avoid; break-inside: avoid;
+    }
     
-    /* ── Syntax highlighting — GitHub Light ──────────────── */
+    /* ── hljs — GitHub Light ───── */
     .hljs { color: #24292e; background: #f6f8fa; }
-    .hljs-keyword, .hljs-selector-tag, .hljs-meta .hljs-keyword,
-    .hljs-template-tag, .hljs-template-variable,
-    .hljs-type, .hljs-variable.language_ { color: #d73a49; }
-    .hljs-title, .hljs-title.class_, .hljs-title.class_.inherited__,
-    .hljs-title.function_ { color: #6f42c1; }
-    .hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta,
-    .hljs-number, .hljs-operator, .hljs-selector-attr,
-    .hljs-selector-class, .hljs-selector-id, .hljs-variable { color: #005cc5; }
-    .hljs-regexp, .hljs-string, .hljs-symbol { color: #032f62; }
-    .hljs-built_in, .hljs-code, .hljs-comment, .hljs-formula,
-    .hljs-name, .hljs-quote, .hljs-selector-pseudo,
-    .hljs-selector-tag, .hljs-subst, .hljs-tag { color: #6a737d; }
+    .hljs-keyword,.hljs-meta .hljs-keyword,.hljs-template-tag,
+    .hljs-type,.hljs-variable.language_ { color: #d73a49; }
+    .hljs-title,.hljs-title.class_,.hljs-title.function_ { color: #6f42c1; }
+    .hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,
+    .hljs-number,.hljs-operator,.hljs-variable { color: #005cc5; }
+    .hljs-regexp,.hljs-string,.hljs-symbol { color: #032f62; }
+    .hljs-built_in,.hljs-code,.hljs-comment,.hljs-formula,
+    .hljs-name,.hljs-quote,.hljs-tag { color: #6a737d; }
     .hljs-section { color: #005cc5; font-weight: 700; }
     .hljs-bullet { color: #735c0f; }
     .hljs-emphasis { font-style: italic; }
     .hljs-strong { font-weight: 700; }
     .hljs-addition { color: #22863a; background: #f0fff4; }
     .hljs-deletion { color: #b31d28; background: #ffeef0; }
+    
+    /* ── Hide print bar when printing ── */
+    @media print {
+        .print-bar { display: none !important; }
+        body { padding: 0; }
+        .page-content { padding: 0; max-width: none; }
+    }
     </style>
     </head>
     <body>
+    
+    <div class="print-bar">
+        <span>📄 ${activeFile.name} — ready to print</span>
+        <div class="print-bar-actions">
+            <button onclick="window.frameElement.dispatchEvent(new CustomEvent('velox-cancel',{bubbles:true}))">✕ Close</button>
+            <button class="primary" onclick="window.print()">🖨 Print / Save PDF</button>
+        </div>
+    </div>
+    
+    <div class="page-content">
     ${contentHTML}
-    <script>
-    (function() {
-        // Wait for both DOM resources AND fonts before printing.
-        // window.onload alone doesn't wait for Google Fonts;
-        // document.fonts.ready alone may fire before images are decoded.
-        // Combining both + a small settle delay is the only reliable approach.
-        function triggerPrint() {
-            document.fonts.ready.then(function() {
-                setTimeout(function() {
-                    window.print();
-                    window.addEventListener('afterprint', function() { window.close(); });
-                }, 350);
-            });
-        }
-        if (document.readyState === 'complete') {
-            triggerPrint();
-        } else {
-            window.addEventListener('load', triggerPrint);
-        }
-    })();
-    <\/script>
+    </div>
+    
     </body>
     </html>`);
+        doc.close();
         
-        pw.document.close();
+        // Cancel button inside iframe communicates up via custom event
+        iframe.addEventListener('velox-cancel', () => {
+            iframe.remove();
+        });
+        
+        // Print triggered from parent — no script timing issues inside iframe
+        iframe.addEventListener('load', () => {
+            // KaTeX CSS is the only external resource. Give it one tick to apply.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    iframe.contentWindow.print();
+                    // After print dialog closes, the parent window regains focus
+                    window.addEventListener('focus', () => {
+                        setTimeout(() => iframe.remove(), 400);
+                    }, { once: true });
+                });
+            });
+        });
     };
 
     const exportAsHTML = () => {
