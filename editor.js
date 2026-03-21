@@ -46,33 +46,30 @@ document.addEventListener('DOMContentLoaded', () => {
         activeFileId: null,
         isPreview: false,
         isSidebarVisible: false,
-        activeTab: 'outline', // 'outline' or 'files'
+        activeTab: 'outline',
         findMatches: [],
         currentMatchIndex: -1,
     };
 
-    // 3. Modern Tech Setup (Performance Observers)
+    // 3. Modern Tech Setup
     marked.setOptions({
         gfm: true,
         breaks: true,
         langPrefix: 'language-',
     });
 
-    // KaTeX Support
     const options = {
         throwOnError: false
     };
     marked.use(markedKatex(options));
 
-    // [Modern Tech] Lazy Highlighter Observer
-    // Prevents freezing by only highlighting code blocks currently visible on screen
     const codeObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const codeEl = entry.target;
                 if (!codeEl.classList.contains('hljs')) {
                     hljs.highlightElement(codeEl);
-                    enhanceCodeBlockUI(codeEl); // Add your Copy Button UI
+                    enhanceCodeBlockUI(codeEl);
                 }
                 observer.unobserve(codeEl);
             }
@@ -81,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Functions
 
-    // Toast Notification System
     window.toast = (message, type = 'info') => {
         const container = document.getElementById('toast-container');
         if (!container) return;
@@ -110,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(dismiss, 3000);
     };
 
-    // [Enhanced] Uses requestAnimationFrame for UI smoothness
     const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -119,14 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    // [Enhanced] Separated logic for cleaner performance
     const enhanceCodeBlockUI = (codeElement) => {
-        // Prevent double processing
         if (codeElement.closest('.code-block-container')) return;
 
         const lang = (Array.from(codeElement.classList).find(c => c.startsWith('language-')) || '').replace('language-', '');
         
-        // Create UI Elements (Preserving your exact design)
         const container = document.createElement('div');
         container.className = 'code-block-container';
         
@@ -155,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         header.append(langName, copyButton);
         
-        // DOM Manipulation
         const preElement = codeElement.parentElement;
         preElement.replaceWith(container);
         container.append(header, preElement);
@@ -165,19 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         const content = activeFile ? activeFile.content : '';
         
-        // 1. Parse Markdown
         const newHTML = marked.parse(content);
 
-        // 2. Update DOM (Only if changed to prevent scroll jumping)
         if (preview.innerHTML !== newHTML) {
-            // Save scroll position before update
             const scrollPos = preview.scrollTop;
             preview.innerHTML = newHTML;
-            // Restore scroll if not syncing
             if (state.isPreview) preview.scrollTop = scrollPos;
         }
 
-        // 3. Attach Lazy Observer to Code Blocks (Zero Lag)
         preview.querySelectorAll('pre code').forEach(codeElement => {
             if (!codeElement.closest('.code-block-container')) {
                 codeObserver.observe(codeElement);
@@ -187,15 +173,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateStats = () => {
         const text = editor.value;
-        // Optimized Regex
         const wordCount = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
         
-        // Update text content directly
         charCountEl.textContent = text.length;
         wordCountEl.textContent = wordCount;
     };
     
-    // [Enhanced] Uses requestIdleCallback to save during browser idle time
     const saveState = () => {
         if ('requestIdleCallback' in window) {
             requestIdleCallback(() => performSave());
@@ -220,20 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadState = async () => {
         state.files = await RazenFS.getAllFiles();
 
-        // Check for a flag from dashboard.js to create a new file
         if (localStorage.getItem('create_new_file') === 'true') {
             localStorage.removeItem('create_new_file');
             const newFileId = await createNewFile();
-            // Redirect to the new file's URL to ensure clean state
             window.location.replace(`editor.html?file=${newFileId}`);
-            return; // Stop execution to allow redirect
+            return;
         }
 
         if (state.files.length === 0) {
             await createNewFile();
         }
 
-        // Determine active file from URL or fallback
         const urlParams = new URLSearchParams(window.location.search);
         const fileIdFromUrl = urlParams.get('file');
 
@@ -248,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (!activeFile) return;
 
-        // Regex optimization
         const headings = activeFile.content.match(/^#{1,6}\s.*$/gm) || [];
         
         if (headings.length > 0) {
@@ -262,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<a href="#${slug}" class="toc-link toc-level-${level}" data-slug="${slug}">${text}</a>`;
             }).join('');
             
-            // Only update DOM if changed
             if (tableOfContents.innerHTML !== tocHTML) {
                 tableOfContents.innerHTML = tocHTML;
             }
@@ -288,6 +266,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.setAttribute('data-theme', theme);
         themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         localStorage.setItem('theme', theme);
+        // Sync more-menu theme icon too
+        const moreThemeIcon = document.getElementById('more-theme-icon');
+        if (moreThemeIcon) {
+            moreThemeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
     };
 
     const toggleSidebar = (show) => {
@@ -323,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
             name.className = 'file-item-name';
             name.textContent = file.name;
 
-            // Extract a date from ID or use a placeholder
             const dateStr = file.id.startsWith('file_') ? new Date(parseInt(file.id.split('_')[1])).toLocaleDateString() : 'Unknown';
             const dateChip = document.createElement('span');
             dateChip.className = 'file-date-chip';
@@ -350,16 +332,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // [Enhanced] Sync Scroll Feature
     const syncScroll = () => {
         if(state.isPreview) return;
-        // Calculate percentage
         const scrollPercentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
-        // Apply to preview
         if (!isNaN(scrollPercentage)) {
              preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
         }
-        // Apply to backdrop
         editorBackdrop.scrollTop = editor.scrollTop;
     };
 
@@ -426,20 +404,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         highlightedText += text.substring(lastIndex).replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
-        // Add a zero-width space at the end to ensure the backdrop height matches if the text ends with a newline
         editorBackdrop.innerHTML = highlightedText + (text.endsWith('\n') ? ' ' : '');
 
-        // Scroll current match into view if needed
         if (state.currentMatchIndex !== -1) {
             const currentMark = editorBackdrop.querySelector('.search-match.current');
             if (currentMark) {
-                // We don't want to scroll the backdrop independently, we want to sync editor scroll
-                // But for find/replace, we might want to jump to the match in the editor
                 const match = state.findMatches[state.currentMatchIndex];
                 editor.selectionStart = match.index;
                 editor.selectionEnd = match.index + match.length;
 
-                // Ensure the selection is visible in the textarea
                 const lineHeight = parseFloat(getComputedStyle(editor).lineHeight);
                 const scrollTop = editor.scrollTop;
                 const offsetTop = currentMark.offsetTop;
@@ -470,9 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         editor.value = text.substring(0, match.index) + replacement + text.substring(match.index + match.length);
 
-        // Re-search after replacement
         performSearch();
-        // Try to stay on the same index if possible, or go to next
         if (state.findMatches.length > 0) {
             state.currentMatchIndex = Math.min(state.currentMatchIndex, state.findMatches.length - 1);
         }
@@ -491,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editor.dispatchEvent(new Event('input'));
     };
 
-    // 5. File Operations (Preserved Exact Logic)
+    // 5. File Operations
     const createNewFile = async () => {
         const newId = `file_${Date.now()}`;
         const fileNumber = state.files.length + 1;
@@ -506,17 +477,13 @@ document.addEventListener('DOMContentLoaded', () => {
         await RazenFS.saveFile(newFile);
         toast('File created', 'success');
         updateEditorAndPreview();
-        return newId; // Return the ID for redirects
+        return newId;
     };
 
-    // Note: This function is internal. If you use it in HTML (onclick), 
-    // you must attach it to window or use event listeners.
-    // Assuming internal usage based on provided code.
     const switchActiveFile = (id) => {
         if (id === state.activeFileId) return;
         state.activeFileId = id;
 
-        // Update URL without reloading the page for better UX
         const url = new URL(window.location);
         url.searchParams.set('file', id);
         history.pushState({}, '', url);
@@ -565,7 +532,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         toast('Preparing PDF...', 'info');
 
-        // Create a hidden iframe for printing
         let iframe = document.getElementById('print-iframe');
         if (!iframe) {
             iframe = document.createElement('iframe');
@@ -707,24 +673,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // No need to saveState, as delete is already persisted
         updateEditorAndPreview();
     };
 
     // 6. Event Listeners
-    const debouncedUpdatePreview = debounce(updatePreview, 250); // Faster response
-    const debouncedUpdateTOC = debounce(updateTableOfContents, 500); // Slower is fine
-    const debouncedSaveState = debounce(saveState, 1000); // Lazy save
+    const debouncedUpdatePreview = debounce(updatePreview, 250);
+    const debouncedUpdateTOC = debounce(updateTableOfContents, 500);
+    const debouncedSaveState = debounce(saveState, 1000);
 
     editor.addEventListener('input', () => {
         const activeFile = state.files.find(f => f.id === state.activeFileId);
         if (activeFile) {
             activeFile.content = editor.value;
 
-            // Instant Stats Update
             updateStats();
 
-            // Smart Schedule
             debouncedUpdatePreview();
             debouncedUpdateTOC();
             debouncedSaveState();
@@ -732,17 +695,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!findReplacePanel.classList.contains('hidden')) {
                 performSearch();
             } else {
-                highlightMatches(); // Update backdrop
+                highlightMatches();
             }
         }
     });
 
-    // [New] Sync Scroll Listener
     editor.addEventListener('scroll', () => {
         window.requestAnimationFrame(syncScroll);
     });
 
-    // Sidebar Tab Listeners
     tabOutline.addEventListener('click', () => {
         state.activeTab = 'outline';
         updateSidebar();
@@ -755,7 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     newFileBtnSidebar.addEventListener('click', async () => {
         const newId = await createNewFile();
-        // Since we are in the same page, we can just switch
         switchActiveFile(newId);
     });
 
@@ -786,7 +746,6 @@ document.addEventListener('DOMContentLoaded', () => {
         viewToggle.title = state.isPreview ? 'Toggle Editor' : 'Toggle Preview';
         appTitle.textContent = state.isPreview ? 'Velox Preview' : 'Velox Editor';
         
-        // Re-run sync scroll when switching back
         if(!state.isPreview) syncScroll();
     });
 
@@ -822,7 +781,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 7. Modal Logic (Preserved)
+    // --- More Menu (Mobile) ---
+    const moreMenuBtn = document.getElementById('more-menu-btn');
+    const moreDropdown = document.getElementById('more-dropdown');
+
+    const positionMoreDropdown = () => {
+        if (!moreMenuBtn || !moreDropdown) return;
+        const rect = moreMenuBtn.getBoundingClientRect();
+        const DROPDOWN_WIDTH = 210;
+        const MARGIN = 8;
+        // Right-align the dropdown with the button's right edge
+        let left = rect.right - DROPDOWN_WIDTH;
+        // Don't go off-screen left
+        if (left < MARGIN) left = MARGIN;
+        // Don't go off-screen right
+        if (left + DROPDOWN_WIDTH > window.innerWidth - MARGIN) {
+            left = window.innerWidth - DROPDOWN_WIDTH - MARGIN;
+        }
+        moreDropdown.style.top = (rect.bottom + 6) + 'px';
+        moreDropdown.style.left = left + 'px';
+        moreDropdown.style.right = 'auto';
+    };
+
+    if (moreMenuBtn && moreDropdown) {
+        moreMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = moreDropdown.classList.contains('hidden');
+            if (isHidden) {
+                positionMoreDropdown();
+            }
+            moreDropdown.classList.toggle('hidden');
+        });
+
+        document.getElementById('more-export-pdf')?.addEventListener('click', () => {
+            moreDropdown.classList.add('hidden');
+            exportAsPDF();
+        });
+
+        document.getElementById('more-export-html')?.addEventListener('click', () => {
+            moreDropdown.classList.add('hidden');
+            exportAsHTML();
+        });
+
+        document.getElementById('more-theme-toggle')?.addEventListener('click', () => {
+            moreDropdown.classList.add('hidden');
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        document.getElementById('more-settings-btn')?.addEventListener('click', () => {
+            moreDropdown.classList.add('hidden');
+            // Delegate to the existing settings button (handled in ai.js)
+            document.getElementById('settings-btn').click();
+        });
+
+        // Close more-dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.more-menu-wrapper')) {
+                moreDropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    // 7. Modal Logic
     let modalResolve = null;
 
     const showModal = ({ title, message, inputValue = '', inputPlaceholder = '', type = 'confirm' }) => {
@@ -839,7 +860,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modalOverlay.classList.remove('hidden');
         
-        // Animation Frame for smoother focus
         requestAnimationFrame(() => {
              if (type === 'prompt') {
                 modalInput.focus();
@@ -888,7 +908,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         await loadState();
 
-        // If loadState triggered a redirect, the rest of this won't run
         if (state.files.length > 0) {
             updateEditorAndPreview();
             updateTableOfContents();
@@ -897,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Handle global keyboard shortcuts
+    // Global keyboard shortcuts
     window.addEventListener('keydown', (e) => {
         const isMod = e.ctrlKey || e.metaKey;
 
