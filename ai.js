@@ -195,10 +195,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsModalCloseBtn = document.getElementById('settings-modal-close-btn');
     const apiKeyInput = document.getElementById('api-key-input');
     const settingsSaveBtn = document.getElementById('settings-save-btn');
+    const showLineNumbersCheckbox = document.getElementById('show-line-numbers');
+    const editorFontSizeSlider = document.getElementById('editor-font-size-slider');
+    const previewFontSizeSlider = document.getElementById('preview-font-size-slider');
+    const editorFontSizeVal = document.getElementById('editor-font-size-val');
+    const previewFontSizeVal = document.getElementById('preview-font-size-val');
 
     settingsBtn.addEventListener('click', () => {
         apiKeyInput.value = localStorage.getItem('gemini-api-key') || '';
+        showLineNumbersCheckbox.checked = localStorage.getItem('show-line-numbers') === 'true';
+
+        const editorSize = localStorage.getItem('editor-font-size') || '16';
+        const previewSize = localStorage.getItem('preview-font-size') || '16';
+
+        editorFontSizeSlider.value = editorSize;
+        editorFontSizeVal.textContent = `${editorSize}px`;
+        previewFontSizeSlider.value = previewSize;
+        previewFontSizeVal.textContent = `${previewSize}px`;
+
         settingsModalOverlay.classList.remove('hidden');
+    });
+
+    editorFontSizeSlider.addEventListener('input', (e) => {
+        const size = e.target.value;
+        editorFontSizeVal.textContent = `${size}px`;
+        document.documentElement.style.setProperty('--editor-font-size', `${size}px`);
+    });
+
+    previewFontSizeSlider.addEventListener('input', (e) => {
+        const size = e.target.value;
+        previewFontSizeVal.textContent = `${size}px`;
+        document.documentElement.style.setProperty('--preview-font-size', `${size}px`);
     });
 
     settingsModalCloseBtn.addEventListener('click', () => {
@@ -208,8 +235,24 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsSaveBtn.addEventListener('click', () => {
         apiKey = apiKeyInput.value.trim();
         localStorage.setItem('gemini-api-key', apiKey);
+
+        const showLineNumbers = showLineNumbersCheckbox.checked;
+        localStorage.setItem('show-line-numbers', showLineNumbers);
+
+        localStorage.setItem('editor-font-size', editorFontSizeSlider.value);
+        localStorage.setItem('preview-font-size', previewFontSizeSlider.value);
+
+        // Dispatch event to notify editor.js
+        window.dispatchEvent(new CustomEvent('settings-updated', {
+            detail: {
+                showLineNumbers,
+                editorFontSize: editorFontSizeSlider.value,
+                previewFontSize: previewFontSizeSlider.value
+            }
+        }));
+
         settingsModalOverlay.classList.add('hidden');
-        if (window.toast) window.toast('API key saved', 'success');
+        if (window.toast) window.toast('Settings saved', 'success');
     });
 
     aiNewChatBtn.addEventListener('click', () => {
