@@ -9,16 +9,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const themeToggle = document.getElementById('theme-toggle');
+    const docCountBadge = document.getElementById('doc-count-badge');
 
     let files = [];
     let modalResolve = null;
 
-    // Dynamically set the copyright year
+    // Card accent palette — cycles through for visual variety
+    const CARD_ACCENTS = [
+        'card-accent-blue',
+        'card-accent-purple',
+        'card-accent-green',
+        'card-accent-amber',
+        'card-accent-rose',
+        'card-accent-teal',
+    ];
+
     if (copyrightYear) {
         copyrightYear.textContent = new Date().getFullYear();
     }
 
-    // Handle creation of a new document
     newDocumentBtn.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.setItem('create_new_file', 'true');
@@ -29,46 +38,81 @@ document.addEventListener('DOMContentLoaded', () => {
         files = await RazenFS.getAllFiles();
     };
 
-    const renderDocuments = () => {
-        if (documentsGrid) {
-            const sortedFiles = files.sort((a, b) => {
-                const timeA = parseInt(a.id.split('_')[1], 10);
-                const timeB = parseInt(b.id.split('_')[1], 10);
-                return timeB - timeA;
-            });
+    const updateDocCount = () => {
+        if (!docCountBadge) return;
+        const n = files.length;
+        docCountBadge.textContent = n === 0 ? 'No files yet' : `${n} file${n === 1 ? '' : 's'}`;
+    };
 
-            if (sortedFiles.length > 0) {
-                documentsGrid.innerHTML = sortedFiles.map(file => `
-                    <div class="document-card">
-                        <a href="editor.html?file=${file.id}" class="document-card-link">
-                            <h3 class="document-title">${file.name}</h3>
-                        </a>
-                        <div class="document-info">
-                             <p class="document-date">
-                                ${new Date(parseInt(file.id.split('_')[1], 10)).toLocaleDateString()}
-                            </p>
-                            <div class="document-actions">
-                                <button class="action-btn rename-btn" data-id="${file.id}" title="Rename">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                <button class="action-btn download-btn" data-id="${file.id}" title="Download">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                                <button class="action-btn delete-btn" data-id="${file.id}" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+    const renderDocuments = () => {
+        if (!documentsGrid) return;
+
+        updateDocCount();
+
+        const sortedFiles = [...files].sort((a, b) => {
+            const timeA = parseInt(a.id.split('_')[1], 10);
+            const timeB = parseInt(b.id.split('_')[1], 10);
+            return timeB - timeA;
+        });
+
+        if (sortedFiles.length > 0) {
+            documentsGrid.innerHTML = sortedFiles.map((file, index) => {
+                const accentClass = CARD_ACCENTS[index % CARD_ACCENTS.length];
+                const date = new Date(parseInt(file.id.split('_')[1], 10));
+                const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                // Preview: first ~80 chars of content after stripping markdown symbols
+                const preview = (file.content || '')
+                    .replace(/^#{1,6}\s+/gm, '')
+                    .replace(/[*_`~]/g, '')
+                    .replace(/\n+/g, ' ')
+                    .trim()
+                    .slice(0, 90);
+
+                return `
+                <div class="document-card ${accentClass}">
+                    <a href="editor.html?file=${file.id}" class="document-card-inner">
+                        <div class="document-card-preview">
+                            <div class="doc-preview-lines">
+                                <span></span><span></span><span></span>
+                                <span class="short"></span>
                             </div>
+                            <div class="doc-preview-badge">MD</div>
+                        </div>
+                        <div class="document-card-body">
+                            <h3 class="document-title">${file.name}</h3>
+                            ${preview ? `<p class="document-preview-text">${preview}</p>` : ''}
+                        </div>
+                    </a>
+                    <div class="document-card-footer">
+                        <span class="document-date">
+                            <i class="far fa-calendar-alt"></i> ${dateStr}
+                        </span>
+                        <div class="document-actions">
+                            <button class="action-btn rename-btn" data-id="${file.id}" title="Rename">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="action-btn download-btn" data-id="${file.id}" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${file.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                `).join('');
-            } else {
-                documentsGrid.innerHTML = `
-                    <div class="no-documents-message">
-                        <h3>You don't have any documents yet.</h3>
-                        <p>Click the "New Document" button to get started.</p>
+                </div>`;
+            }).join('');
+        } else {
+            documentsGrid.innerHTML = `
+                <div class="no-documents-message">
+                    <div class="no-docs-icon">
+                        <i class="fas fa-feather-alt"></i>
                     </div>
-                `;
-            }
+                    <h3>Nothing here yet</h3>
+                    <p>Create your first document to get started</p>
+                    <a href="editor.html" class="cta-button no-docs-cta" onclick="localStorage.setItem('create_new_file','true')">
+                        <i class="fas fa-plus"></i> New Document
+                    </a>
+                </div>`;
         }
     };
 
@@ -86,13 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modalOverlay.classList.remove('hidden');
         if (type === 'prompt') {
-            modalInput.focus();
-            modalInput.select();
+            requestAnimationFrame(() => { modalInput.focus(); modalInput.select(); });
         }
 
-        return new Promise((resolve) => {
-            modalResolve = resolve;
-        });
+        return new Promise((resolve) => { modalResolve = resolve; });
     };
 
     const hideModal = () => {
@@ -134,19 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
     };
 
-    const createNewFile = () => {
-        const newId = `file_${Date.now()}`;
-        const fileNumber = files.length + 1;
-        const newFile = {
-            id: newId,
-            name: `Untitled ${fileNumber}`,
-            content: `# Untitled ${fileNumber}\n\nStart writing your markdown here.`
-        };
-        files.push(newFile);
-        saveFiles();
-        return newFile.id;
-    };
-
     const handleDeleteFile = async (id) => {
         const fileIndex = files.findIndex(f => f.id === id);
         if (fileIndex === -1) return;
@@ -167,15 +195,10 @@ document.addEventListener('DOMContentLoaded', () => {
     documentsGrid.addEventListener('click', (e) => {
         const target = e.target.closest('.action-btn');
         if (!target) return;
-
         const id = target.dataset.id;
-        if (target.classList.contains('rename-btn')) {
-            handleRenameFile(id);
-        } else if (target.classList.contains('download-btn')) {
-            handleDownloadFile(id);
-        } else if (target.classList.contains('delete-btn')) {
-            handleDeleteFile(id);
-        }
+        if (target.classList.contains('rename-btn')) handleRenameFile(id);
+        else if (target.classList.contains('download-btn')) handleDownloadFile(id);
+        else if (target.classList.contains('delete-btn')) handleDeleteFile(id);
     });
 
     modalConfirmBtn.addEventListener('click', () => {
@@ -187,19 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     modalCancelBtn.addEventListener('click', () => {
-        if (modalResolve) {
-            modalResolve(null);
-            hideModal();
-        }
+        if (modalResolve) { modalResolve(null); hideModal(); }
     });
 
     modalOverlay.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) {
-            if (modalResolve) {
-                modalResolve(null);
-                hideModal();
-            }
-        }
+        if (e.target === modalOverlay && modalResolve) { modalResolve(null); hideModal(); }
     });
 
     const applyTheme = (theme) => {
@@ -209,8 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        const current = document.documentElement.getAttribute('data-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
     });
 
     const init = async () => {

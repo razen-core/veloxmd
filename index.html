@@ -6,7 +6,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="theme-color" content="#0f172a">
     
-    <!-- Primary Meta Tags -->
     <title>Velox Markdown | Professional Browser-Based Editor</title>
     <meta name="title" content="Velox Markdown | Professional Browser-Based Editor">
     <meta name="description" content="Velox Markdown is a high-performance editor for developers. Experience real-time preview, instant file management, and a distraction-free workflow.">
@@ -15,58 +14,68 @@
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
     
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://veloxmd.vercel.app/">
     <meta property="og:title" content="Velox Markdown | Professional Browser-Based Editor">
     <meta property="og:description" content="Velox Markdown is a high-performance editor for developers. Experience real-time preview, instant file management, and a distraction-free workflow.">
     <meta property="og:image" content="https://veloxmd.vercel.app/assets/velox-preview.jpg">
     
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://veloxmd.vercel.app/">
     <meta property="twitter:title" content="Velox Markdown | Professional Browser-Based Editor">
     <meta property="twitter:description" content="Velox Markdown is a high-performance editor for developers. Experience real-time preview, instant file management, and a distraction-free workflow.">
     <meta property="twitter:image" content="https://veloxmd.vercel.app/assets/velox-preview.jpg">
     
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://veloxmd.vercel.app">
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- CSS -->
     <link rel="stylesheet" href="icons/css/all.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="dashboard-container">
+
+        <!-- Top Nav Bar -->
         <header class="dashboard-header">
-            <h1 class="dashboard-title">My Documents</h1>
+            <div class="dashboard-wordmark">
+                <div class="dashboard-logo-mark">
+                    <i class="fas fa-feather-alt"></i>
+                </div>
+                <span class="dashboard-logo-text">Velox</span>
+            </div>
             <div class="controls">
                 <button id="theme-toggle" title="Toggle Theme">
                     <i class="fas fa-moon"></i>
                 </button>
                 <a href="editor.html" id="new-document-btn" class="cta-button">
-                    <i class="fas fa-plus"></i> <span class="cta-button-text">New Document</span>
+                    <i class="fas fa-plus"></i>
+                    <span class="cta-button-text">New Document</span>
                 </a>
             </div>
         </header>
+
+        <!-- Page Title + count -->
+        <div class="dashboard-hero">
+            <h1 class="dashboard-title">My Documents</h1>
+            <span class="dashboard-doc-count" id="doc-count-badge">— files</span>
+        </div>
+
         <main class="dashboard-main">
             <section id="documents-grid" class="documents-grid">
                 <!-- Documents will be dynamically inserted here -->
             </section>
         </main>
+
         <footer class="dashboard-footer">
-            <p>&copy; <span id="copyright-year">2025</span> Velox MarkDown</p>
+            <p>&copy; <span id="copyright-year">2025</span> Velox Markdown</p>
         </footer>
     </div>
+
     <script src="fs-helpers.js" defer></script>
     <script src="dashboard.js" defer></script>
 
