@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalConfirmBtn = document.getElementById('modal-confirm-btn');
     const themeToggle = document.getElementById('theme-toggle');
     const docCountBadge = document.getElementById('doc-count-badge');
+    const dropOverlay = document.getElementById('drop-overlay');
 
     let files = [];
     let modalResolve = null;
@@ -36,6 +37,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadFiles = async () => {
         files = await RazenFS.getAllFiles();
+    };
+
+    window.toast = (message, type = 'info') => {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+
+        let icon = 'info-circle';
+        if (type === 'success') icon = 'check-circle';
+        if (type === 'error') icon = 'exclamation-circle';
+        if (type === 'warning') icon = 'exclamation-triangle';
+
+        toast.innerHTML = `
+            <i class="fas fa-${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toast);
+
+        const dismiss = () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        };
+
+        toast.onclick = dismiss;
+        setTimeout(dismiss, 3000);
     };
 
     const updateDocCount = () => {
@@ -159,6 +188,63 @@ document.addEventListener('DOMContentLoaded', () => {
             renderDocuments();
         }
     };
+
+    const handleFileImport = (file) => {
+        if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
+            toast('Only .md and .txt files are supported', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            const name = file.name.replace(/\.(md|txt)$/, '');
+            const newId = `file_${Date.now()}`;
+            const newFile = {
+                id: newId,
+                name: name,
+                content: content
+            };
+            await RazenFS.saveFile(newFile);
+            files.push(newFile);
+            renderDocuments();
+            toast('File imported', 'success');
+        };
+        reader.readAsText(file);
+    };
+
+    // Drag and Drop
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropOverlay.classList.remove('hidden');
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.relatedTarget === null || !dropOverlay.contains(e.relatedTarget)) {
+             dropOverlay.classList.add('hidden');
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropOverlay.classList.add('hidden');
+
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handleFileImport(file);
+        }
+    };
+
+    if (documentsGrid) {
+        documentsGrid.addEventListener('dragenter', handleDragOver);
+        dropOverlay.addEventListener('dragover', (e) => e.preventDefault());
+        dropOverlay.addEventListener('dragleave', handleDragLeave);
+        dropOverlay.addEventListener('drop', handleDrop);
+    }
 
     const handleDownloadFile = (id) => {
         const file = files.find(f => f.id === id);

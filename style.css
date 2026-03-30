@@ -435,12 +435,40 @@ body {
     position: relative;
     overflow-y: hidden;
     background-color: var(--bg-primary);
+    transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #editor-container {
     position: relative;
     width: 100%;
     height: 100%;
+    display: flex;
+    transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#line-numbers {
+    width: 48px;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-align: right;
+    padding-right: 8px;
+    padding-top: 1.2rem;
+    line-height: 1.7;
+    user-select: none;
+    flex-shrink: 0;
+    overflow: hidden;
+    z-index: 2;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#line-numbers.hidden {
+    width: 0;
+    padding: 0;
+    border-right: none;
+    opacity: 0;
 }
 
 #editor-backdrop {
@@ -451,7 +479,7 @@ body {
     height: 100%;
     padding: 1.2rem 1.2rem;
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--editor-font-size, 1rem);
     line-height: 1.7;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -479,7 +507,12 @@ body {
     height: 100%;
     padding: 1.2rem 1.2rem;
     overflow-y: auto;
-    transition: opacity 0.2s ease-in-out;
+    transition: opacity 0.2s ease-in-out, padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.show-line-numbers #editor,
+body.show-line-numbers #editor-backdrop {
+    padding-left: 48px;
 }
 
 #editor {
@@ -488,7 +521,7 @@ body {
     border: none;
     resize: none;
     font-family: var(--font-mono);
-    font-size: 1rem;
+    font-size: var(--editor-font-size, 1rem);
     line-height: 1.7;
     z-index: 1;
     display: block;
@@ -502,6 +535,7 @@ body {
     line-height: 1.8;
     max-width: 800px;
     margin: 0 auto;
+    font-size: var(--preview-font-size, 1rem);
 }
 
 .hidden {
@@ -1736,6 +1770,23 @@ body {
     color: var(--text-secondary);
 }
 
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-field input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+}
+
+.checkbox-field label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
 #api-key-input {
     width: 100%;
     padding: 0.75rem;
@@ -1744,6 +1795,11 @@ body {
     color: var(--text-primary);
     border-radius: 12px;
     font-size: 1rem;
+}
+
+.settings-field input[type="range"] {
+    width: 100%;
+    cursor: pointer;
 }
 
 #settings-modal-actions {
@@ -2124,6 +2180,108 @@ body {
 .toc-level-4 { padding-left: 4rem; }
 .toc-level-5 { padding-left: 5rem; }
 .toc-level-6 { padding-left: 6rem; }
+
+/* --- 18. Zen Mode --- */
+body.zen-mode #app-header,
+body.zen-mode #app-footer,
+body.zen-mode #floating-toolbar,
+body.zen-mode #sidebar,
+body.zen-mode #show-toolbar-btn,
+body.zen-mode #find-replace-panel {
+    display: none !important;
+}
+
+body.zen-mode #app-body {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+}
+
+body.zen-mode #app-main {
+    display: flex;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    padding: 0;
+}
+
+body.zen-mode #editor-container {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+body.zen-mode #editor,
+body.zen-mode #editor-backdrop,
+body.zen-mode #preview {
+    padding: 3rem;
+}
+
+#zen-exit-pill {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    box-shadow: var(--shadow-medium);
+    z-index: 10001;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* --- 19. Transitions --- */
+.fade-enter {
+    opacity: 0;
+}
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-exit {
+    opacity: 1;
+}
+.fade-exit-active {
+    opacity: 0;
+    transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- 17. Drag & Drop Overlay --- */
+#drop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: color-mix(in oklch, var(--bg-primary), transparent 20%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+#drop-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.drop-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-header);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.drop-message i {
+    font-size: 3rem;
+}
 
 .no-outline {
     color: var(--text-secondary);

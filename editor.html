@@ -58,6 +58,10 @@
                         <button id="export-html-btn"><i class="fa-solid fa-file-code"></i> Export as HTML</button>
                     </div>
                 </div>
+                <button id="import-btn" title="Import File">
+                    <i class="fa-solid fa-upload"></i>
+                </button>
+                <input type="file" id="import-input" accept=".md,.txt" class="hidden">
                 <button id="view-toggle" title="Toggle Preview">
                     <i class="fa-solid fa-eye"></i>
                 </button>
@@ -122,6 +126,7 @@
             </aside>
             <main id="app-main">
                 <div id="editor-container">
+                    <div id="line-numbers" class="hidden"></div>
                     <div id="editor-backdrop"></div>
                     <textarea id="editor" spellcheck="false"></textarea>
                 </div>
@@ -277,6 +282,18 @@
                     <label for="api-key-input">Gemini API Key</label>
                     <input type="password" id="api-key-input" placeholder="Enter your API key">
                 </div>
+                <div class="settings-field checkbox-field">
+                    <input type="checkbox" id="show-line-numbers">
+                    <label for="show-line-numbers">Show line numbers</label>
+                </div>
+                <div class="settings-field">
+                    <label for="editor-font-size-slider">Editor font size: <span id="editor-font-size-val">16px</span></label>
+                    <input type="range" id="editor-font-size-slider" min="12" max="20" step="1" value="16">
+                </div>
+                <div class="settings-field">
+                    <label for="preview-font-size-slider">Preview font size: <span id="preview-font-size-val">16px</span></label>
+                    <input type="range" id="preview-font-size-slider" min="12" max="20" step="1" value="16">
+                </div>
                 <div id="settings-modal-actions">
                     <button id="settings-save-btn">Save</button>
                 </div>
@@ -296,6 +313,19 @@
         <div class="more-dropdown-divider"></div>
         <button id="more-theme-toggle" role="menuitem"><i class="fa-solid fa-moon" id="more-theme-icon"></i> <span id="more-theme-label">Toggle Theme</span></button>
         <button id="more-settings-btn" role="menuitem"><i class="fa-solid fa-cog"></i> Settings</button>
+    </div>
+
+    <!-- Drag and Drop Overlay -->
+    <div id="drop-overlay" class="hidden">
+        <div class="drop-message">
+            <i class="fa-solid fa-file-import"></i>
+            <span>Drop to open file</span>
+        </div>
+    </div>
+
+    <!-- Zen Mode Exit Pill -->
+    <div id="zen-exit-pill" class="hidden">
+        Press Esc to exit
     </div>
 
     <!-- Toast Notifications Container -->

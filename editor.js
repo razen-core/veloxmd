@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportBtn = document.getElementById('export-btn');
     const exportDropdownToggle = document.getElementById('export-dropdown-toggle');
     const exportMenu = document.getElementById('export-menu');
+    const importBtn = document.getElementById('import-btn');
+    const importInput = document.getElementById('import-input');
+    const dropOverlay = document.getElementById('drop-overlay');
+    const appMain = document.getElementById('app-main');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
     const exportHtmlBtn = document.getElementById('export-html-btn');
     const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -31,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const replaceAllBtn = document.getElementById('replace-all-btn');
     const closeFindBtn = document.getElementById('close-find-btn');
     const editorBackdrop = document.getElementById('editor-backdrop');
+    const lineNumbers = document.getElementById('line-numbers');
+    const zenExitPill = document.getElementById('zen-exit-pill');
 
     // Modal Elements
     const modalOverlay = document.getElementById('modal-overlay');
@@ -49,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
         activeTab: 'outline',
         findMatches: [],
         currentMatchIndex: -1,
+        showLineNumbers: localStorage.getItem('show-line-numbers') === 'true',
+        isZenMode: false,
     };
 
     // 3. Modern Tech Setup
@@ -177,6 +185,57 @@ document.addEventListener('DOMContentLoaded', () => {
         
         charCountEl.textContent = text.length;
         wordCountEl.textContent = wordCount;
+        updateLineNumbers();
+    };
+
+    const updateLineNumbers = () => {
+        if (!state.showLineNumbers) return;
+        const lines = editor.value.split('\n');
+        const count = lines.length;
+        let html = '';
+        for (let i = 1; i <= count; i++) {
+            html += `<div>${i}</div>`;
+        }
+        lineNumbers.innerHTML = html;
+    };
+
+    const toggleLineNumbers = (show) => {
+        state.showLineNumbers = show;
+        lineNumbers.classList.toggle('hidden', !show);
+        document.body.classList.toggle('show-line-numbers', show);
+        localStorage.setItem('show-line-numbers', show);
+        if (show) updateLineNumbers();
+    };
+
+    const toggleZenMode = (show) => {
+        if (show === undefined) show = !state.isZenMode;
+        state.isZenMode = show;
+
+        document.body.classList.add('fade-exit');
+        requestAnimationFrame(() => {
+            document.body.classList.add('fade-exit-active');
+        });
+
+        setTimeout(() => {
+            document.body.classList.remove('fade-exit', 'fade-exit-active');
+            document.body.classList.toggle('zen-mode', show);
+            document.body.classList.add('fade-enter');
+            requestAnimationFrame(() => {
+                document.body.classList.add('fade-enter-active');
+            });
+
+            setTimeout(() => {
+                document.body.classList.remove('fade-enter', 'fade-enter-active');
+            }, 300);
+
+            if (show) {
+                zenExitPill.classList.remove('hidden');
+                setTimeout(() => zenExitPill.classList.add('hidden'), 2000);
+                if (state.isSidebarVisible) toggleSidebar(false);
+            } else {
+                zenExitPill.classList.add('hidden');
+            }
+        }, 300);
     };
     
     const saveState = () => {
@@ -339,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
              preview.scrollTop = scrollPercentage * (preview.scrollHeight - preview.clientHeight);
         }
         editorBackdrop.scrollTop = editor.scrollTop;
+        lineNumbers.scrollTop = editor.scrollTop;
     };
 
     // --- Find & Replace Logic ---
@@ -463,19 +523,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 5. File Operations
-    const createNewFile = async () => {
+    const createNewFile = async (name, content) => {
         const newId = `file_${Date.now()}`;
         const fileNumber = state.files.length + 1;
         const newFile = {
             id: newId,
-            name: `Untitled ${fileNumber}`,
-            content: `# Untitled ${fileNumber}\n\nStart writing your markdown here.`
+            name: name || `Untitled ${fileNumber}`,
+            content: content || `# Untitled ${fileNumber}\n\nStart writing your markdown here.`
         };
         state.files.push(newFile);
         state.activeFileId = newId;
 
         await RazenFS.saveFile(newFile);
-        toast('File created', 'success');
+        toast(name ? 'File imported' : 'File created', 'success');
         updateEditorAndPreview();
         return newId;
     };
@@ -1330,6 +1390,65 @@ document.addEventListener('DOMContentLoaded', () => {
         exportMenu.classList.add('hidden');
     });
 
+    importBtn.addEventListener('click', () => {
+        importInput.click();
+    });
+
+    importInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileImport(file);
+        }
+        importInput.value = '';
+    });
+
+    const handleFileImport = (file) => {
+        if (!file.name.endsWith('.md') && !file.name.endsWith('.txt')) {
+            toast('Only .md and .txt files are supported', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            const name = file.name.replace(/\.(md|txt)$/, '');
+            const newId = await createNewFile(name, content);
+            switchActiveFile(newId);
+        };
+        reader.readAsText(file);
+    };
+
+    // Drag and Drop
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropOverlay.classList.remove('hidden');
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.relatedTarget === null || !dropOverlay.contains(e.relatedTarget)) {
+             dropOverlay.classList.add('hidden');
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropOverlay.classList.add('hidden');
+
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handleFileImport(file);
+        }
+    };
+
+    appMain.addEventListener('dragenter', handleDragOver);
+    dropOverlay.addEventListener('dragover', (e) => e.preventDefault());
+    dropOverlay.addEventListener('dragleave', handleDragLeave);
+    dropOverlay.addEventListener('drop', handleDrop);
+
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.export-dropdown')) {
             exportMenu.classList.add('hidden');
@@ -1460,6 +1579,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const init = async () => {
         const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
+        toggleLineNumbers(state.showLineNumbers);
+
+        const savedEditorSize = localStorage.getItem('editor-font-size') || '16';
+        const savedPreviewSize = localStorage.getItem('preview-font-size') || '16';
+        document.documentElement.style.setProperty('--editor-font-size', `${savedEditorSize}px`);
+        document.documentElement.style.setProperty('--preview-font-size', `${savedPreviewSize}px`);
 
         await loadState();
 
@@ -1472,6 +1597,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Global keyboard shortcuts
+    window.addEventListener('settings-updated', (e) => {
+        if (e.detail.showLineNumbers !== undefined) {
+            toggleLineNumbers(e.detail.showLineNumbers);
+        }
+    });
+
     window.addEventListener('keydown', (e) => {
         const isMod = e.ctrlKey || e.metaKey;
 
@@ -1520,9 +1651,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const currentTheme = document.documentElement.getAttribute('data-theme');
                     applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
                     break;
+                case 'f':
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        toggleZenMode();
+                    }
+                    break;
             }
+        } else if (e.key === 'F11') {
+            e.preventDefault();
+            toggleZenMode();
         } else if (e.key === 'Escape') {
-            if (!findReplacePanel.classList.contains('hidden')) {
+            if (state.isZenMode) {
+                toggleZenMode(false);
+            } else if (!findReplacePanel.classList.contains('hidden')) {
                 toggleFindReplace(false);
             }
         }
